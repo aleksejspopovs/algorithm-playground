@@ -19,7 +19,7 @@ Objects are instantiations of subclasses of `APGObject`. An object has:
 
 - a **render method**, `render(node)`, which renders the current state of the object into the HTML element `node`. The render method may not modify state.
 
-	Any HTML event listener that `render` creates may not modify state either. To modify state on user interaction, the event listeners should call `this.triggerEvent(event)` (where `event` might contain any auxiliary information that the event processing method will need), which will schedule a call to `processEvent`.
+	Any HTML event listener that `render` creates may not modify state either. To modify state on user interaction, the event listeners should call `this.triggerEvent(event)` (where `event` might contain any auxiliary information that the event processing method will need), which will schedule a call to `processEvent`. The same applies to any timers created during rendering or processing.
 
 	`node`, as well as any HTML elements created by `render`, may not be accessed or modified outside of a call to `render`. Long-term state should not be stored in HTML elements: while they will generally be persisted (so it is fine, for example, to create a text input element and expect that it will be around long enough for the user to be able to type something in it), the `render` method should not assume this, nor should it assume that the `node` element will be the same across all calls to `render`.
 
