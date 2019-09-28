@@ -10,7 +10,8 @@ class STVisualizer extends APGObject {
 	}
 
 	processMessage (plugName, message) {
-		// TODO this violates constraint about not relying on message contents :(
+		// TODO this violates constraint about not relying on message contents
+		// sticking around long-term/not being mutated :(
 		this.state.tree = message
 		this.stateUpdated()
 	}

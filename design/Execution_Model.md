@@ -40,7 +40,7 @@ The receiving object must not modify the contents of messages it receives[^msg-i
 
 The sending object may assume that the contents of messages it sends will not be modified.
 
-[^msg-immutable]: How can this be enforced? It probably cannot. Does ECMAScript have any sort of a const modifier for function parameters yet?
+[^msg-immutable]: How can this be enforced? It probably cannot. Does ECMAScript have any sort of a const modifier for function parameters yet? Maybe this is actually worth using TypeScript/CoffeeScript for?
 [^msg-typing]: Do we want to let users enforce typing? If so, it would have to be a property of the plugs and the wires could check if the source type is compatible with the destination type. But I am not sure we want to build a real type system on top of JavaScript.
 
 # Execution model
