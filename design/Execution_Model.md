@@ -40,7 +40,7 @@ The object will not in processing mode during rendering, or when DOM events or t
 
 Objects have input and output plugs. Every plug is essentially a register, that is, it holds a single value at a time. An object may read the values on its input plugs and write to the values on its output plugs.
 
-A wire connects an output plug of an object to an input plug of an object. The objects need not be distinct, and the connection graph may have cycles and multiple edges. When an output plug A is connected to input plug B, every write to plug A will also overwrite the value on plug B. Removing a wire has no effect on the values of either of its endpoints.
+A wire connects an output plug of an object to an input plug of an object. The objects need not be distinct, and the connection graph may have cycles and multiple edges. When an output plug A is connected to input plug B, every write to plug A will also overwrite the value on plug B. Removing a wire has no effect on the values of either of its endpoints. Creating a new wire will overwrite the value of the destination plug with the value of the source plug, unless the value of the source plug is `null`.
 
 The value of a plug is a JavaScript object[^msg-typing]. The object does not have to be serializable, but it does have to be acyclic and copyable[^msg-acyclic-copyable].
 
