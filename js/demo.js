@@ -5,77 +5,61 @@ import {SegmentTree} from './segmenttree.js'
 class STVisualizer extends APGObject {
 	constructor () {
 		super()
-		this.addInputPlug('tree')
-		this.state = {tree: null}
-	}
-
-	processMessage (plugName, message) {
-		// TODO this violates constraint about not relying on message contents
-		// sticking around long-term/not being mutated :(
-		this.state.tree = message
-		this.stateUpdated()
+		this.newInputPlug('tree')
 	}
 
 	render (node) {
-		return (this.state.tree !== null) ? this.state.tree.toString() : 'no tree'
+		return (this.input.tree.read() !== null) ? this.input.tree.read().toString() : 'no tree'
 	}
 }
 
 class STUpdater extends APGObject {
 	constructor () {
 		super()
-		this.addInputPlug('tree')
-		this.addInputPlug('index')
-		this.addInputPlug('value')
-		this.addOutputPlug('tree')
-		this.state = {tree: null, index: null}
+		this.newInputPlug('tree', this.processInput)
+		this.newInputPlug('index', this.processInput)
+		this.newInputPlug('value', this.processInput)
+		this.newOutputPlug('tree')
 	}
 
-	processMessage (plugName, message) {
-		// TODO: this object performs its action when the third plug is triggered.
-		// should we come up with guidelines around stuff like this?
-		switch (plugName) {
-			case 'tree':
-				// TODO: violates immutability
-				this.state.tree = message
-				this.stateUpdated()
-			break;
-			case 'index':
-				this.state.index = message
-				this.stateUpdated()
-			break;
-			case 'value':
-				this.state.tree.set(this.state.index, message)
-				this.outputMessage('tree', this.state.tree)
-				this.stateUpdated()
-			break;
+	processInput () {
+		if (
+			(this.input.tree.read() === null)
+			|| (this.input.index.read() === null)
+			|| (this.input.value.read() === null)
+		) {
+			return
 		}
+
+		let tree = this.input.tree.copy()
+		tree.set(this.input.index.read(), this.input.value.read())
+		this.output.tree.write(tree)
 	}
 }
 
 class STInitializer extends APGObject {
 	constructor () {
 		super()
-		this.addOutputPlug('tree')
+		this.newOutputPlug('tree')
 	}
 
-	processEvent (event) {
-		this.outputMessage('tree', new SegmentTree(1, 10))
+	ping () {
+		this.scheduleProcessing(() => this.output.tree.write(new SegmentTree(1, 10)))
 	}
 }
 
 let program = new APGProgram()
-console.log(program)
 program.addObject(new STInitializer(), 'initializer')
 program.addObject(new STVisualizer(), 'visualizer')
 program.addObject(new STUpdater(), 'updater')
 
 program.addWire('initializer', 'tree', 'updater', 'tree')
-program.addWire('updater', 'tree', 'updater', 'tree')
+// program.addWire('updater', 'tree', 'updater', 'tree')
 program.addWire('updater', 'tree', 'visualizer', 'tree')
 
-program._objects['initializer'].triggerEvent('ping')
-program.scheduleMessageTo('updater', 'index', 3)
-program.scheduleMessageTo('updater', 'value', 5)
-program.scheduleMessageTo('updater', 'index', 2)
-program.scheduleMessageTo('updater', 'value', 1)
+program._objects['initializer'].ping()
+
+program.schedulePlugUpdate('updater', 'index', 3)
+program.schedulePlugUpdate('updater', 'value', 5)
+program.schedulePlugUpdate('updater', 'index', 2)
+program.schedulePlugUpdate('updater', 'value', 1)

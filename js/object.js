@@ -1,57 +1,63 @@
+import {APGInputPlug, APGOutputPlug} from './plugs.js'
+
 export class APGObject {
 	constructor () {
-		this._inputPlugs = []
-		this._outputPlugs = []
+		this.input = {}
+		this.output = {}
+
+		this._inputOrder = []
+		this._outputOrder = []
 
 		this._program = null
 		this._name = null
-		this._needsRender = false
+
+		this._isProcessing = false
 	}
 
 	processMessage (plugName, message) {}
 	processEvent (event) {}
 	render (node) {}
 
-	addInputPlug (name) {
+	newInputPlug (name, updateHandler = null) {
 		if (this._program !== null) {
 			throw new Error('cannot add plugs after being attached to a program')
 		}
-		if (this._inputPlugs.indexOf(name) !== -1) {
+		if (this.input.hasOwnProperty(name)) {
 			throw new Error(`cannot add duplicate input plug ${name}`)
 		}
-		this._inputPlugs.push(name)
+		let plug = new APGInputPlug(name, this, updateHandler)
+		this.input[name] = plug
+		this._inputOrder.push(name)
 	}
 
-	addOutputPlug (name) {
+	newOutputPlug (name) {
 		if (this._program !== null) {
 			throw new Error('cannot add plugs after being attached to a program')
 		}
-		if (this._outputPlugs.indexOf(name) !== -1) {
+		if (this.output.hasOwnProperty(name)) {
 			throw new Error(`cannot add duplicate output plug ${name}`)
 		}
-		this._outputPlugs.push(name)
+		let plug = new APGOutputPlug(name, this, this._program)
+		this.output[name] = plug
+		this._outputOrder.push(name)
 	}
 
-	stateUpdated () {
-		// TODO: check for _program
-		// TODO: deduplication?
-		this._program.scheduleRender(this._name)
-	}
-
-	outputMessage (plug, message) {
-		// TODO: check for _program, existence of plug
-		this._program.scheduleMessagesFrom(this._name, plug, message)
-	}
-
-	triggerEvent (event) {
-		// TODO: check for _program
-		this._program.scheduleProcessing(() => this.processEvent(event))
+	scheduleProcessing (callback) {
+		if (this._program === null) {
+			throw new Error('cannot schedule processing before object has been attached')
+		}
+		this._program.scheduleProcessing(this._name, callback)
 	}
 
 	attachToProgram (program, name) {
 		if (this._program !== null) {
 			throw new Error('objects can only be attached once')
 		}
+
+		Object.freeze(this.inputs)
+		Object.freeze(this.outputs)
+		Object.freeze(this._inputOrder)
+		Object.freeze(this._outputOrder)
 
 		this._program = program
 		this._name = name

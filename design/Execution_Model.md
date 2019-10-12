@@ -32,6 +32,8 @@ At any given moment in time, an object is either in **processing mode** or not. 
 - calls to an input plug's update handler,
 - calls to a callback scheduled with `this.scheduleProcessing`.
 
+TKTK For now, we assume that any processing requires a rerender afterwards.
+
 The object will not in processing mode during rendering, or when DOM events or timers fire (so if any processing needs to be performed in response to those, the object must use `this.scheduleProcessing`).
 
 [^obj-metadata]: TBD

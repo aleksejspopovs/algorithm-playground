@@ -8,3 +8,15 @@ export function generateUnusedKey(dict, prefix) {
 		}
 	}
 }
+
+export function deepCopy(obj) {
+	// TODO: implement
+	// throw new Error('not implemented')
+	return obj
+}
+
+export function deepFreeze(obj) {
+	// TODO: implement
+	// throw new Error('not implemented')
+	return obj
+}

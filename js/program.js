@@ -1,6 +1,10 @@
 import {generateUnusedKey} from './util.js'
 import {PriorityQueue} from './queue.js'
 
+function qualifiedPlugName(objectName, plugName) {
+	return `${objectName}->${plugName}`
+}
+
 export class APGProgram {
 	constructor () {
 		this._objects = {}
@@ -36,13 +40,13 @@ export class APGProgram {
 		if (!this._objects.hasOwnProperty(srcObject)) {
 			throw new Error(`source object ${srcObject} does not exist`)
 		}
-		if (this._objects[srcObject]._outputPlugs.indexOf(srcPlug) === -1) {
+		if (!this._objects[srcObject].output.hasOwnProperty(srcPlug)) {
 			throw new Error(`source object ${srcObject} does not have an output plug ${srcPlug}`)
 		}
 		if (!this._objects.hasOwnProperty(destObject)) {
 			throw new Error(`destination object ${destObject} does not exist`)
 		}
-		if (this._objects[destObject]._inputPlugs.indexOf(destPlug) === -1) {
+		if (!this._objects[destObject].input.hasOwnProperty(destPlug)) {
 			throw new Error(`destination object ${destObject} does not have an input plug ${destPlug}`)
 		}
 
@@ -54,11 +58,17 @@ export class APGProgram {
 
 		this._wires[name] = {object: destObject, plug: destPlug}
 
-		let srcPlugFullName = `${srcObject}->${srcPlug}` // TODO factor out
+		let srcPlugFullName = qualifiedPlugName(srcObject, srcPlug)
 		if (!this._wiresByPlug.hasOwnProperty(srcPlugFullName)) {
 			this._wiresByPlug[srcPlugFullName] = []
 		}
 		this._wiresByPlug[srcPlugFullName].push(name)
+
+		// update dest value if src value not null
+		let srcPlugObj = this._objects[srcObject].output[srcPlug]
+		if (srcPlugObj._value !== null) {
+			this.schedulePlugUpdate(destObject, destPlug, srcPlugObj._value)
+		}
 	}
 
 	renderObject (objectName) {
@@ -66,8 +76,19 @@ export class APGProgram {
 		console.log(`rendered ${objectName}: ${result}`)
 	}
 
-	scheduleProcessing (f) {
-		this._workQueue.push(f, 1)
+	scheduleProcessing (objectName, f) {
+		this._workQueue.push(() => {
+			if (this._objects[objectName]._isProcessing) {
+				throw new Error('trying to enter processing mode on object already in it')
+			}
+			this._objects[objectName]._isProcessing = true
+			try {
+				f()
+			} finally {
+				this._objects[objectName]._isProcessing = false
+				this.scheduleRender(objectName)
+			}
+		}, 1)
 		this.performWork()
 	}
 
@@ -76,21 +97,22 @@ export class APGProgram {
 		this.performWork()
 	}
 
-	scheduleMessageTo (objectName, plugName, message) {
+	schedulePlugUpdate (objectName, plugName, value) {
 		this.scheduleProcessing(
-			() => this._objects[objectName].processMessage(plugName, message)
+			objectName,
+			() => this._objects[objectName].input[plugName]._write(value)
 		)
 	}
 
-	scheduleMessagesFrom (objectName, plugName, message) {
-		let plugFullName = `${objectName}->${plugName}` // TODO factor out
+	schedulePlugUpdatesFrom (objectName, plugName, value) {
+		let plugFullName = qualifiedPlugName(objectName, plugName)
 		if (!this._wiresByPlug.hasOwnProperty(plugFullName)) {
 			return
 		}
 
 		for (let wire of this._wiresByPlug[plugFullName]) {
 			let {object, plug} = this._wires[wire]
-			this.scheduleMessageTo(object, plug, message)
+			this.schedulePlugUpdate(object, plug, value)
 		}
 	}
 
