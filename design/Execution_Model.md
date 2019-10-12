@@ -42,13 +42,15 @@ Objects have input and output plugs. Every plug is essentially a register, that 
 
 A wire connects an output plug of an object to an input plug of an object. The objects need not be distinct, and the connection graph may have cycles and multiple edges. When an output plug A is connected to input plug B, every write to plug A will also overwrite the value on plug B. Removing a wire has no effect on the values of either of its endpoints.
 
-The value of a plug is a JavaScript object[^msg-typing]. The object does not have to be serializable.
+The value of a plug is a JavaScript object[^msg-typing]. The object does not have to be serializable, but it does have to be acyclic and copyable[^msg-acyclic-copyable].
 
 To write a value to an output plug, use `plug.write(obj)`. You may assume that `obj` will not be modified by the plug or anything else (during or after the call to `write`), and any changes you make to it after the call to `write` will not be propagated.
 
 To read a value from an input plug, use `plug.read()`. The result object will be [deep-frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze), i.e., you will not be able to modify it. If you would like to obtain a non-frozen copy of the object, use `plug.copy()`.
 
 [^msg-typing]: Do we want to let users enforce typing? If so, it would have to be a property of the plugs and the wires could check if the source type is compatible with the destination type. But I am not sure we want to build a real type system on top of JavaScript.
+
+[^msg-acyclic-copyable]: TKTK
 
 # Execution model
 
