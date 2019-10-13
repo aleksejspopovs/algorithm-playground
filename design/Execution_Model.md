@@ -44,7 +44,7 @@ Objects have input and output plugs. Every plug is essentially a register, that 
 
 A wire connects an output plug of an object to an input plug of an object. The objects need not be distinct, and the connection graph may have cycles and multiple edges. When an output plug A is connected to input plug B, every write to plug A will also overwrite the value on plug B. Removing a wire has no effect on the values of either of its endpoints. Creating a new wire will overwrite the value of the destination plug with the value of the source plug, unless the value of the source plug is `null`.
 
-The value of a plug is a JavaScript object[^msg-typing]. The object does not have to be serializable, but it does have to be acyclic and copyable[^msg-acyclic-copyable].
+The value of a plug is a JavaScript object[^msg-typing], which must be APG-compatible (see `Compatible_Objects.md`).
 
 To write a value to an output plug, use `plug.write(obj)`. You may assume that `obj` will not be modified by the plug or anything else (during or after the call to `write`), and any changes you make to it after the call to `write` will not be propagated.
 
