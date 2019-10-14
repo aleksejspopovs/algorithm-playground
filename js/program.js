@@ -1,5 +1,5 @@
 import {generateUnusedKey} from './util.js'
-import {PriorityQueue} from './queue.js'
+import {TwoPriorityQueue} from './queue.js'
 
 function qualifiedPlugName(objectName, plugName) {
 	return `${objectName}->${plugName}`
@@ -11,7 +11,7 @@ export class APGProgram {
 		this._wires = {}
 		this._wiresByPlug = {}
 
-		this._workQueue = new PriorityQueue()
+		this._workQueue = new TwoPriorityQueue()
 		this._workHappening = false
 	}
 
@@ -77,7 +77,7 @@ export class APGProgram {
 	}
 
 	scheduleProcessing (objectName, f) {
-		this._workQueue.push(() => {
+		this._workQueue.pushRegular(() => {
 			if (this._objects[objectName]._isProcessing) {
 				throw new Error('trying to enter processing mode on object already in it')
 			}
@@ -88,12 +88,12 @@ export class APGProgram {
 				this._objects[objectName]._isProcessing = false
 				this.scheduleRender(objectName)
 			}
-		}, 1)
+		})
 		this.performWork()
 	}
 
 	scheduleRender (objectName) {
-		this._workQueue.push(() => this.renderObject(objectName), 2)
+		this._workQueue.pushPrioritized(() => this.renderObject(objectName))
 		this.performWork()
 	}
 

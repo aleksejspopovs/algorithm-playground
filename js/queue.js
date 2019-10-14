@@ -2,7 +2,6 @@ export class Queue {
 	constructor () {
 		this._store = []
 		this._index = 0
-		// TODO: actually delete elements when they are popped
 	}
 
 	push (element) {
@@ -13,7 +12,18 @@ export class Queue {
 		if (this._store._index >= this._store.length) {
 			throw new Error('popping an empty queue')
 		}
-		return this._store[this._index++]
+
+		let result = this._store[this._index++]
+
+		if (this._index * 2 >= this._store.length) {
+			// if more than half of the items stored in queue have been popped,
+			// rebuild the queue, getting rid of them.
+			// (this gives amortized O(1) pops.)
+			this._store = this._store.slice(this._index)
+			this._index = 0
+		}
+
+		return result
 	}
 
 	empty () {
@@ -22,21 +32,24 @@ export class Queue {
 }
 
 
-// TODO: real priority queue?
-export class PriorityQueue {
+export class TwoPriorityQueue {
 	constructor () {
 		this._queues = [new Queue(), new Queue()]
 	}
 
-	push (element, priority) {
-		this._queues[priority - 1].push(element)
+	pushRegular (element) {
+		this._queues[1].push(element)
+	}
+
+	pushPrioritized (element) {
+		this._queues[0].push(element)
 	}
 
 	pop () {
-		if (!this._queues[1].empty()) {
-			return this._queues[1].pop()
-		} else if (!this._queues[0].empty()) {
+		if (!this._queues[0].empty()) {
 			return this._queues[0].pop()
+		} else if (!this._queues[1].empty()) {
+			return this._queues[1].pop()
 		} else {
 			throw new Error('popping an empty queue')
 		}
