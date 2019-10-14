@@ -1,10 +1,39 @@
-export class SegmentTree {
+import {APGData} from './data.js'
+import {objectsEqual, objectClone, objectFreeze} from './util.js'
+
+export class SegmentTree extends APGData {
 	constructor (l, r) {
+		super()
 		this._l = l
 		this._r = r
 		this._lchild = null
 		this._rchild = null
 		this._sum = 0
+	}
+
+	equals (other) {
+		return (
+			(other.constructor === SegmentTree)
+			&& (this._l === other._l)
+			&& (this._r === other._r)
+			&& (this._sum === other._sum)
+			&& objectsEqual(this._lchild, other._lchild)
+			&& objectsEqual(this._rchild, other._rchild)
+		)
+	}
+
+	clone () {
+		let result = new SegmentTree(this._l, this._r)
+		result._sum = this._sum
+		result._lchild = objectClone(this._lchild)
+		result._rchild = objectClone(this._rchild)
+		return result
+	}
+
+	freeze () {
+		objectFreeze(this._lchild)
+		objectFreeze(this._rchild)
+		Object.freeze(this)
 	}
 
 	isLeaf () {

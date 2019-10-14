@@ -1,4 +1,4 @@
-import {deepCopy, deepFreeze} from './util.js'
+import {objectClone, objectFreeze, objectsEqual} from './util.js'
 
 export class APGInputPlug {
 	constructor (name, object, updateHandler) {
@@ -23,7 +23,7 @@ export class APGInputPlug {
 	}
 
 	copy () {
-		return deepCopy(this._value)
+		return objectClone(this._value)
 	}
 }
 
@@ -39,7 +39,12 @@ export class APGOutputPlug {
 			throw new Error('cannot write into output plugs when object is not in processing mode')
 		}
 
-		this._value = deepFreeze(deepCopy(value))
+		if (objectsEqual(this._value, value)) {
+			// skip update because the value has not changed
+			return
+		}
+
+		this._value = objectFreeze(objectClone(value))
 		this._object._program.schedulePlugUpdatesFrom(this._object._name, this.name, this._value)
 	}
 }
