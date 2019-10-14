@@ -6,7 +6,8 @@ function qualifiedPlugName(objectName, plugName) {
 }
 
 export class APGProgram {
-	constructor () {
+	constructor (apg) {
+		this._apg = apg
 		this._objects = {}
 		this._wires = {}
 		this._wiresByPlug = {}
@@ -72,8 +73,10 @@ export class APGProgram {
 	}
 
 	renderObject (objectName) {
-		let result = this._objects[objectName].render(null)
-		console.log(`rendered ${objectName}: ${result}`)
+		let object = this._objects[objectName]
+		let node = this._apg.getRenderTarget(object)
+		object.render(node)
+		console.log(`rendered ${objectName}`)
 	}
 
 	scheduleProcessing (objectName, f) {
@@ -93,7 +96,7 @@ export class APGProgram {
 	}
 
 	scheduleRender (objectName) {
-		this._workQueue.pushPrioritized(() => this.renderObject(objectName))
+		this._workQueue.pushPrioritized(() => this._apg.render())
 		this.performWork()
 	}
 
@@ -127,7 +130,15 @@ export class APGProgram {
 			// TODO: handle exceptions
 			let pendingOp = this._workQueue.pop()
 			console.log(`executing ${pendingOp}`)
-			pendingOp()
+			try {
+				pendingOp()
+			} catch (e) {
+				console.error(`some error happened in work loop: ${e}`)
+				// TODO: recover somehow, but make sure
+				// that _workHappening is still reset eventually.
+				// we probably want to mark the involved object as
+				// being in some sort of a broken state.
+			}
 		}
 		this._workHappening = false
 

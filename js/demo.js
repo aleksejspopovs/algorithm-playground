@@ -1,4 +1,4 @@
-import {APGProgram} from './program.js'
+import {APG} from './apg.js'
 import {APGObject} from './object.js'
 import {SegmentTree} from './segmenttree.js'
 
@@ -9,7 +9,9 @@ class STVisualizer extends APGObject {
 	}
 
 	render (node) {
-		return (this.input.tree.read() !== null) ? this.input.tree.read().toString() : 'no tree'
+		let tree = this.input.tree.read()
+		let output = (tree !== null) ? tree.toString() : 'no tree'
+		node.innerHTML = `<pre>${output}</pre>` // warning: don't do this at home
 	}
 }
 
@@ -48,18 +50,18 @@ class STInitializer extends APGObject {
 	}
 }
 
-let program = new APGProgram()
-program.addObject(new STInitializer(), 'initializer')
-program.addObject(new STVisualizer(), 'visualizer')
-program.addObject(new STUpdater(), 'updater')
+let apg = new APG(document.body)
+apg._program.addObject(new STInitializer(), 'initializer')
+apg._program.addObject(new STVisualizer(), 'visualizer')
+apg._program.addObject(new STUpdater(), 'updater')
 
-program.addWire('initializer', 'tree', 'updater', 'tree')
-// program.addWire('updater', 'tree', 'updater', 'tree')
-program.addWire('updater', 'tree', 'visualizer', 'tree')
+apg._program.addWire('initializer', 'tree', 'updater', 'tree')
+// apg._program.addWire('updater', 'tree', 'updater', 'tree')
+apg._program.addWire('updater', 'tree', 'visualizer', 'tree')
 
-program._objects['initializer'].ping()
+apg._program._objects['initializer'].ping()
 
-program.schedulePlugUpdate('updater', 'index', 3)
-program.schedulePlugUpdate('updater', 'value', 5)
-program.schedulePlugUpdate('updater', 'index', 2)
-program.schedulePlugUpdate('updater', 'value', 1)
+apg._program.schedulePlugUpdate('updater', 'index', 3)
+apg._program.schedulePlugUpdate('updater', 'value', 5)
+apg._program.schedulePlugUpdate('updater', 'index', 2)
+apg._program.schedulePlugUpdate('updater', 'value', 1)
