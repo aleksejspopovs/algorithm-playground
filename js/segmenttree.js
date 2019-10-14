@@ -13,7 +13,8 @@ export class SegmentTree extends APGData {
 
 	equals (other) {
 		return (
-			(other.constructor === SegmentTree)
+			(other !== null)
+			&& (other.constructor === SegmentTree)
 			&& (this._l === other._l)
 			&& (this._r === other._r)
 			&& (this._sum === other._sum)
@@ -100,6 +101,10 @@ export class SegmentTree extends APGData {
 
 	toLines() {
 		let result = [`- ${this._l} -- ${this._r} (${this._sum})`]
+		if (this.isLeaf()) {
+			return result
+		}
+
 		if (this._lchild !== null) {
 			result = result.concat(this._lchild.toLines().map((x) => '  ' + x))
 		} else {
