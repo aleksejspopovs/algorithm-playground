@@ -24,7 +24,7 @@ export class APG {
 			title.innerText = `${object._name}`
 			node.appendChild(title)
 
-			let inner = document.createElement('inner')
+			let inner = document.createElement('div')
 			inner.className = 'inner'
 			node.appendChild(inner)
 
