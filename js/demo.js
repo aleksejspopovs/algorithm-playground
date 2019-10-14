@@ -7,6 +7,7 @@ class Spinner extends APGObject {
 		super()
 		this.newOutputPlug('value')
 		this.state = {value: 0}
+		this.scheduleProcessing(() => this.output.value.write(0))
 	}
 
 	render (node) {
@@ -89,9 +90,6 @@ class STInitializer extends APGObject {
 	constructor () {
 		super()
 		this.newOutputPlug('tree')
-	}
-
-	ping () {
 		this.scheduleProcessing(() => this.output.tree.write(new SegmentTree(0, 7)))
 	}
 }
@@ -110,10 +108,3 @@ apg._program.addWire('index', 'value', 'updater', 'index')
 apg._program.addWire('value', 'value', 'updater', 'value')
 apg._program.addWire('updater', 'tree', 'visualizer', 'tree')
 apg._program.addWire('updater', 'tree', 'hold', 'held')
-
-apg._program._objects['initializer'].ping()
-
-// apg._program.schedulePlugUpdate('updater', 'index', 3)
-// apg._program.schedulePlugUpdate('updater', 'value', 5)
-// apg._program.schedulePlugUpdate('updater', 'index', 2)
-// apg._program.schedulePlugUpdate('updater', 'value', 1)

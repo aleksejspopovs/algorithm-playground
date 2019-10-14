@@ -10,6 +10,7 @@ export class APGObject {
 
 		this._program = null
 		this._name = null
+		this._deferredProcessing = []
 
 		this._isProcessing = false
 	}
@@ -44,9 +45,10 @@ export class APGObject {
 
 	scheduleProcessing (callback) {
 		if (this._program === null) {
-			throw new Error('cannot schedule processing before object has been attached')
+			this._deferredProcessing.push(callback)
+		} else {
+			this._program.scheduleProcessing(this._name, callback)
 		}
-		this._program.scheduleProcessing(this._name, callback)
 	}
 
 	attachToProgram (program, name) {
@@ -61,6 +63,11 @@ export class APGObject {
 
 		this._program = program
 		this._name = name
+
+		for (let callback of this._deferredProcessing) {
+			this.scheduleProcessing(callback)
+		}
+		this._deferredProcessing = []
 
 		this._program.scheduleRender(this._name)
 	}
