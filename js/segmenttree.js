@@ -13,9 +13,7 @@ export class SegmentTree extends APGData {
 
 	equals (other) {
 		return (
-			(other !== null)
-			&& (other.constructor === SegmentTree)
-			&& (this._l === other._l)
+			(this._l === other._l)
 			&& (this._r === other._r)
 			&& (this._sum === other._sum)
 			&& objectsEqual(this._lchild, other._lchild)

@@ -34,7 +34,11 @@ export function objectsEqual(left, right) {
 			// this is an object that is not an instance of anything interesting
 			throw new Error('not implemented')
 		} else if (left instanceof APGData) {
-			return left.equals(right)
+			return (
+				(right instanceof APGData)
+				&& (left.constructor === right.constructor)
+				&& left.equals(right)
+			)
 		} else {
 			throw new Error(`tried to compare incomparable objects ${left} and ${right}`)
 		}
