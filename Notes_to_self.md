@@ -1,1 +1,2 @@
 - Do we want to rename objects to something else to avoid confusion with JS objects? "Entities"?
+- Add typed arrays to the list of compatible types.
