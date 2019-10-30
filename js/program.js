@@ -1,5 +1,5 @@
-import {generateUnusedKey} from './util.js'
-import {TwoPriorityQueue} from './queue.js'
+import {generateUnusedKey} from './utils/objects.js'
+import {TwoPriorityQueue} from './utils/queue.js'
 
 function qualifiedPlugName(objectName, plugName) {
 	return `${objectName}->${plugName}`

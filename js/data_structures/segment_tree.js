@@ -1,5 +1,5 @@
-import {APGData} from './data.js'
-import {objectsEqual, objectClone, objectFreeze} from './util.js'
+import {APGData} from '../data.js'
+import {objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
 
 export class SegmentTree extends APGData {
 	constructor (l, r) {

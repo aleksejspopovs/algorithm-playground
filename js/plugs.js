@@ -1,4 +1,4 @@
-import {objectClone, objectFreeze, objectsEqual} from './util.js'
+import {objectClone, objectFreeze, objectsEqual} from './utils/objects.js'
 
 export class APGInputPlug {
 	constructor (name, object, updateHandler) {

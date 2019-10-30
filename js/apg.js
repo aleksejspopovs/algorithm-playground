@@ -1,11 +1,5 @@
 import {APGProgram} from './program.js'
 
-export class APGObjectUI {
-	constructor () {
-
-	}
-}
-
 export class APG {
 	constructor (root) {
 		this._root = root

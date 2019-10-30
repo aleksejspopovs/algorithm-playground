@@ -1,4 +1,4 @@
-import {APGData} from './data.js'
+import {APGData} from '../data.js'
 
 export function generateUnusedKey(dict, prefix) {
 	// is there a fast way to get the number of keys in an object?
