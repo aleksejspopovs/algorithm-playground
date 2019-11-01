@@ -1,6 +1,6 @@
-import {APGObject} from '../object.js'
+import {APGBox} from '../box.js'
 
-export class Spinner extends APGObject {
+export class Spinner extends APGBox {
 	constructor () {
 		super()
 		this.newOutputPlug('value')

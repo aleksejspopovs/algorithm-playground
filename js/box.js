@@ -1,6 +1,6 @@
 import {APGInputPlug, APGOutputPlug} from './plugs.js'
 
-export class APGObject {
+export class APGBox {
 	constructor () {
 		this.input = {}
 		this.output = {}
@@ -53,7 +53,7 @@ export class APGObject {
 
 	attachToProgram (program, name) {
 		if (this._program !== null) {
-			throw new Error('objects can only be attached once')
+			throw new Error('boxes can only be attached once')
 		}
 
 		Object.freeze(this.inputs)

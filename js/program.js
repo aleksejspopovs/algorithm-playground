@@ -1,14 +1,14 @@
 import {generateUnusedKey} from './utils/objects.js'
 import {TwoPriorityQueue} from './utils/queue.js'
 
-function qualifiedPlugName(objectName, plugName) {
-	return `${objectName}->${plugName}`
+function qualifiedPlugName(boxName, plugName) {
+	return `${boxName}->${plugName}`
 }
 
 export class APGProgram {
 	constructor (apg) {
 		this._apg = apg
-		this._objects = {}
+		this._boxes = {}
 		this._wires = {}
 		this._wiresByPlug = {}
 
@@ -16,39 +16,39 @@ export class APGProgram {
 		this._workHappening = false
 	}
 
-	generateObjectName () {
-		return generateUnusedKey(this._objects, 'object_')
+	generateBoxName () {
+		return generateUnusedKey(this._boxes, 'box_')
 	}
 
 	generateWireName () {
 		return generateUnusedKey(this._wires, 'wire_')
 	}
 
-	addObject (object, name = null) {
-		name = name || this.generateObjectName()
+	addBox (box, name = null) {
+		name = name || this.generateBoxName()
 
-		if (this._objects.hasOwnProperty(name)) {
-			throw new Error(`cannot add object with duplicate name ${name}`)
+		if (this._boxes.hasOwnProperty(name)) {
+			throw new Error(`cannot add box with duplicate name ${name}`)
 		}
 
-		this._objects[name] = object
-		object.attachToProgram(this, name)
+		this._boxes[name] = box
+		box.attachToProgram(this, name)
 
 		return name
 	}
 
-	addWire (srcObject, srcPlug, destObject, destPlug, name = null) {
-		if (!this._objects.hasOwnProperty(srcObject)) {
-			throw new Error(`source object ${srcObject} does not exist`)
+	addWire (srcBox, srcPlug, destBox, destPlug, name = null) {
+		if (!this._boxes.hasOwnProperty(srcBox)) {
+			throw new Error(`source box ${srcBox} does not exist`)
 		}
-		if (!this._objects[srcObject].output.hasOwnProperty(srcPlug)) {
-			throw new Error(`source object ${srcObject} does not have an output plug ${srcPlug}`)
+		if (!this._boxes[srcBox].output.hasOwnProperty(srcPlug)) {
+			throw new Error(`source box ${srcBox} does not have an output plug ${srcPlug}`)
 		}
-		if (!this._objects.hasOwnProperty(destObject)) {
-			throw new Error(`destination object ${destObject} does not exist`)
+		if (!this._boxes.hasOwnProperty(destBox)) {
+			throw new Error(`destination box ${destBox} does not exist`)
 		}
-		if (!this._objects[destObject].input.hasOwnProperty(destPlug)) {
-			throw new Error(`destination object ${destObject} does not have an input plug ${destPlug}`)
+		if (!this._boxes[destBox].input.hasOwnProperty(destPlug)) {
+			throw new Error(`destination box ${destBox} does not have an input plug ${destPlug}`)
 		}
 
 		name = name || this.generateWireName()
@@ -57,65 +57,65 @@ export class APGProgram {
 			throw new Error(`cannot add wire with duplicate name ${name}`)
 		}
 
-		this._wires[name] = {object: destObject, plug: destPlug}
+		this._wires[name] = {box: destBox, plug: destPlug}
 
-		let srcPlugFullName = qualifiedPlugName(srcObject, srcPlug)
+		let srcPlugFullName = qualifiedPlugName(srcBox, srcPlug)
 		if (!this._wiresByPlug.hasOwnProperty(srcPlugFullName)) {
 			this._wiresByPlug[srcPlugFullName] = []
 		}
 		this._wiresByPlug[srcPlugFullName].push(name)
 
 		// update dest value if src value not null
-		let srcPlugObj = this._objects[srcObject].output[srcPlug]
+		let srcPlugObj = this._boxes[srcBox].output[srcPlug]
 		if (srcPlugObj._value !== null) {
-			this.schedulePlugUpdate(destObject, destPlug, srcPlugObj._value)
+			this.schedulePlugUpdate(destBox, destPlug, srcPlugObj._value)
 		}
 	}
 
-	renderObject (objectName) {
-		let object = this._objects[objectName]
-		let node = this._apg.getRenderTarget(object)
-		object.render(node)
-		console.log(`rendered ${objectName}`)
+	renderBox (boxName) {
+		let box = this._boxes[boxName]
+		let node = this._apg.getRenderTarget(box)
+		box.render(node)
+		console.log(`rendered ${boxName}`)
 	}
 
-	scheduleProcessing (objectName, f) {
+	scheduleProcessing (boxName, f) {
 		this._workQueue.pushRegular(() => {
-			if (this._objects[objectName]._isProcessing) {
-				throw new Error('trying to enter processing mode on object already in it')
+			if (this._boxes[boxName]._isProcessing) {
+				throw new Error('trying to enter processing mode on box already in it')
 			}
-			this._objects[objectName]._isProcessing = true
+			this._boxes[boxName]._isProcessing = true
 			try {
 				f()
 			} finally {
-				this._objects[objectName]._isProcessing = false
-				this.scheduleRender(objectName)
+				this._boxes[boxName]._isProcessing = false
+				this.scheduleRender(boxName)
 			}
 		})
 		this.performWork()
 	}
 
-	scheduleRender (objectName) {
+	scheduleRender (boxName) {
 		this._workQueue.pushPrioritized(() => this._apg.render())
 		this.performWork()
 	}
 
-	schedulePlugUpdate (objectName, plugName, value) {
+	schedulePlugUpdate (boxName, plugName, value) {
 		this.scheduleProcessing(
-			objectName,
-			() => this._objects[objectName].input[plugName]._write(value)
+			boxName,
+			() => this._boxes[boxName].input[plugName]._write(value)
 		)
 	}
 
-	schedulePlugUpdatesFrom (objectName, plugName, value) {
-		let plugFullName = qualifiedPlugName(objectName, plugName)
+	schedulePlugUpdatesFrom (boxName, plugName, value) {
+		let plugFullName = qualifiedPlugName(boxName, plugName)
 		if (!this._wiresByPlug.hasOwnProperty(plugFullName)) {
 			return
 		}
 
 		for (let wire of this._wiresByPlug[plugFullName]) {
-			let {object, plug} = this._wires[wire]
-			this.schedulePlugUpdate(object, plug, value)
+			let {box, plug} = this._wires[wire]
+			this.schedulePlugUpdate(box, plug, value)
 		}
 	}
 
@@ -136,7 +136,7 @@ export class APGProgram {
 				console.error(`some error happened in work loop: ${e}`)
 				// TODO: recover somehow, but make sure
 				// that _workHappening is still reset eventually.
-				// we probably want to mark the involved object as
+				// we probably want to mark the involved box as
 				// being in some sort of a broken state.
 			}
 		}

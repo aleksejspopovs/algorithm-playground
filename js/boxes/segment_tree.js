@@ -1,7 +1,7 @@
-import {APGObject} from '../object.js'
+import {APGBox} from '../box.js'
 import {SegmentTree} from '../data_structures/segment_tree.js'
 
-export class STVisualizer extends APGObject {
+export class STVisualizer extends APGBox {
 	constructor () {
 		super()
 		this.newInputPlug('tree')
@@ -14,7 +14,7 @@ export class STVisualizer extends APGObject {
 	}
 }
 
-export class STUpdater extends APGObject {
+export class STUpdater extends APGBox {
 	constructor () {
 		super()
 		this.newInputPlug('tree', this.processInput)
@@ -38,7 +38,7 @@ export class STUpdater extends APGObject {
 	}
 }
 
-export class STInitializer extends APGObject {
+export class STInitializer extends APGBox {
 	constructor () {
 		super()
 		this.newOutputPlug('tree')

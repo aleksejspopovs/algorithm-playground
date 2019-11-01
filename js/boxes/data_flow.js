@@ -1,6 +1,6 @@
-import {APGObject} from '../object.js'
+import {APGBox} from '../box.js'
 
-export class Hold extends APGObject {
+export class Hold extends APGBox {
 	constructor () {
 		super()
 		this.newInputPlug('held')
