@@ -1,8 +1,16 @@
 import {generateUnusedKey} from './utils/objects.js'
 import {TwoPriorityQueue} from './utils/queue.js'
 
-function qualifiedPlugName(boxName, plugName) {
-	return `${boxName}->${plugName}`
+function qualifiedPlugName(boxId, plugName) {
+	return `${boxId}->${plugName}`
+}
+
+class BoxWithMetadata {
+	constructor (box, x = 0, y = 0) {
+		this.object = box
+		this.x = x
+		this.y = y
+	}
 }
 
 export class APGProgram {
@@ -16,99 +24,101 @@ export class APGProgram {
 		this._workHappening = false
 	}
 
-	generateBoxName () {
+	generateBoxId () {
 		return generateUnusedKey(this._boxes, 'box_')
 	}
 
-	generateWireName () {
+	generateWireId () {
 		return generateUnusedKey(this._wires, 'wire_')
 	}
 
-	addBox (box, name = null) {
-		name = name || this.generateBoxName()
+	addBox (box, id = null) {
+		id = id || this.generateBoxId()
 
-		if (this._boxes.hasOwnProperty(name)) {
-			throw new Error(`cannot add box with duplicate name ${name}`)
+		if (this._boxes.hasOwnProperty(id)) {
+			throw new Error(`cannot add box with duplicate id ${id}`)
 		}
 
-		this._boxes[name] = box
-		box.attachToProgram(this, name)
+		this._boxes[id] = new BoxWithMetadata(box)
+		console.log('adding', id)
+		box.attachToProgram(this, id)
 
-		return name
+		this.scheduleProgramRefresh()
+		this.scheduleBoxRefresh(id)
+
+		return id
 	}
 
-	addWire (srcBox, srcPlug, destBox, destPlug, name = null) {
+	addWire (srcBox, srcPlug, destBox, destPlug, id = null) {
 		if (!this._boxes.hasOwnProperty(srcBox)) {
 			throw new Error(`source box ${srcBox} does not exist`)
 		}
-		if (!this._boxes[srcBox].output.hasOwnProperty(srcPlug)) {
+		if (!this._boxes[srcBox].object.output.hasOwnProperty(srcPlug)) {
 			throw new Error(`source box ${srcBox} does not have an output plug ${srcPlug}`)
 		}
 		if (!this._boxes.hasOwnProperty(destBox)) {
 			throw new Error(`destination box ${destBox} does not exist`)
 		}
-		if (!this._boxes[destBox].input.hasOwnProperty(destPlug)) {
+		if (!this._boxes[destBox].object.input.hasOwnProperty(destPlug)) {
 			throw new Error(`destination box ${destBox} does not have an input plug ${destPlug}`)
 		}
 
-		name = name || this.generateWireName()
+		id = id || this.generateWireId()
 
-		if (this._wires.hasOwnProperty(name)) {
-			throw new Error(`cannot add wire with duplicate name ${name}`)
+		if (this._wires.hasOwnProperty(id)) {
+			throw new Error(`cannot add wire with duplicate id ${id}`)
 		}
 
-		this._wires[name] = {box: destBox, plug: destPlug}
+		this._wires[id] = {box: destBox, plug: destPlug}
 
 		let srcPlugFullName = qualifiedPlugName(srcBox, srcPlug)
 		if (!this._wiresByPlug.hasOwnProperty(srcPlugFullName)) {
 			this._wiresByPlug[srcPlugFullName] = []
 		}
-		this._wiresByPlug[srcPlugFullName].push(name)
+		this._wiresByPlug[srcPlugFullName].push(id)
 
 		// update dest value if src value not null
-		let srcPlugObj = this._boxes[srcBox].output[srcPlug]
+		let srcPlugObj = this._boxes[srcBox].object.output[srcPlug]
 		if (srcPlugObj._value !== null) {
 			this.schedulePlugUpdate(destBox, destPlug, srcPlugObj._value)
 		}
 	}
 
-	renderBox (boxName) {
-		let box = this._boxes[boxName]
-		let node = this._apg.getRenderTarget(box)
-		box.render(node)
-		console.log(`rendered ${boxName}`)
-	}
-
-	scheduleProcessing (boxName, f) {
+	scheduleProcessing (boxId, f) {
 		this._workQueue.pushRegular(() => {
-			if (this._boxes[boxName]._isProcessing) {
+			if (this._boxes[boxId].object._isProcessing) {
 				throw new Error('trying to enter processing mode on box already in it')
 			}
-			this._boxes[boxName]._isProcessing = true
+			this._boxes[boxId].object._isProcessing = true
 			try {
 				f()
 			} finally {
-				this._boxes[boxName]._isProcessing = false
-				this.scheduleRender(boxName)
+				this._boxes[boxId].object._isProcessing = false
+				this.scheduleBoxRefresh(boxId)
 			}
 		})
 		this.performWork()
 	}
 
-	scheduleRender (boxName) {
-		this._workQueue.pushPrioritized(() => this._apg.render())
+	scheduleProgramRefresh () {
+		this._workQueue.pushPrioritized(() => this._apg.refreshProgram())
 		this.performWork()
 	}
 
-	schedulePlugUpdate (boxName, plugName, value) {
+	scheduleBoxRefresh (boxId) {
+		this._workQueue.pushPrioritized(() => this._apg.refreshBox(boxId))
+		this.performWork()
+	}
+
+	schedulePlugUpdate (boxId, plugName, value) {
 		this.scheduleProcessing(
-			boxName,
-			() => this._boxes[boxName].input[plugName]._write(value)
+			boxId,
+			() => this._boxes[boxId].object.input[plugName]._write(value)
 		)
 	}
 
-	schedulePlugUpdatesFrom (boxName, plugName, value) {
-		let plugFullName = qualifiedPlugName(boxName, plugName)
+	schedulePlugUpdatesFrom (boxId, plugName, value) {
+		let plugFullName = qualifiedPlugName(boxId, plugName)
 		if (!this._wiresByPlug.hasOwnProperty(plugFullName)) {
 			return
 		}

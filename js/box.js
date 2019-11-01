@@ -9,7 +9,7 @@ export class APGBox {
 		this._outputOrder = []
 
 		this._program = null
-		this._name = null
+		this._id = null
 		this._deferredProcessing = []
 
 		this._isProcessing = false
@@ -47,11 +47,11 @@ export class APGBox {
 		if (this._program === null) {
 			this._deferredProcessing.push(callback)
 		} else {
-			this._program.scheduleProcessing(this._name, callback)
+			this._program.scheduleProcessing(this._id, callback)
 		}
 	}
 
-	attachToProgram (program, name) {
+	attachToProgram (program, id) {
 		if (this._program !== null) {
 			throw new Error('boxes can only be attached once')
 		}
@@ -62,13 +62,11 @@ export class APGBox {
 		Object.freeze(this._outputOrder)
 
 		this._program = program
-		this._name = name
+		this._id = id
 
 		for (let callback of this._deferredProcessing) {
 			this.scheduleProcessing(callback)
 		}
 		this._deferredProcessing = []
-
-		this._program.scheduleRender(this._name)
 	}
 }

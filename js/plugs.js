@@ -45,6 +45,6 @@ export class APGOutputPlug {
 		}
 
 		this._value = objectFreeze(objectClone(value))
-		this._box._program.schedulePlugUpdatesFrom(this._box._name, this.name, this._value)
+		this._box._program.schedulePlugUpdatesFrom(this._box._id, this.name, this._value)
 	}
 }
