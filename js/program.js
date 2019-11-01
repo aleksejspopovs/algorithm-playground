@@ -32,15 +32,14 @@ export class APGProgram {
 		return generateUnusedKey(this._wires, 'wire_')
 	}
 
-	addBox (box, id = null) {
+	addBox (box, id = null, x = 0, y = 0) {
 		id = id || this.generateBoxId()
 
 		if (this._boxes.hasOwnProperty(id)) {
 			throw new Error(`cannot add box with duplicate id ${id}`)
 		}
 
-		this._boxes[id] = new BoxWithMetadata(box)
-		console.log('adding', id)
+		this._boxes[id] = new BoxWithMetadata(box, x, y)
 		box.attachToProgram(this, id)
 
 		this.scheduleProgramRefresh()

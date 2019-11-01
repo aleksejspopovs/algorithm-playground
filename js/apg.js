@@ -27,6 +27,7 @@ export class APG {
 	}
 
 	refreshProgram () {
+		console.log('refreshing program')
 		d3.select(this._root)
 		  .selectAll('div.box')
 		  .data(
@@ -35,15 +36,45 @@ export class APG {
 		    // works differently for lambdas
 		    function (d) { return d ? d : `box-${this.id}` }
 		  )
-		  .join(enter => {
-		    let node = enter.append('div')
-		                      .attr('class', 'box')
-		                      .attr('id', (d) => `box-${d}`)
-		    node.append('div')
-		          .attr('class', 'title')
-		          .text((d) => d)
-		    node.append('div')
+		  .join(
+		  	enter => {
+		      let node = enter.append('div')
+		                        .attr('class', 'box')
+		                        .attr('id', d => `box-${d}`)
+		      // input plugs
+		      node.append('ul')
+		            .attr('class', 'input-plugs')
+		            .selectAll('li')
+		              .data(d => this._program._boxes[d].object._inputOrder)
+		              .join('li')
+		                .text(d => d)
+
+		      // title
+		      node.append('div')
+		            .attr('class', 'title')
+		            .text(d => d)
+		            .call(d3.drag().on('drag', () => {
+		              this._program._boxes[d3.event.subject].x += d3.event.x
+		              this._program._boxes[d3.event.subject].y += d3.event.y
+		              this.refreshProgram()
+		            }))
+
+		      // render area
+		      node.append('div')
 		          .attr('class', 'inner')
-		  })
+
+		      // output plugs
+		      node.append('ul')
+		            .attr('class', 'output-plugs')
+		            .selectAll('li')
+		              .data(d => this._program._boxes[d].object._outputOrder)
+		              .join('li')
+		                .text(d => d)
+
+		      return node
+		    }
+		  )
+		  .style('left', d => `${this._program._boxes[d].x}px`)
+		  .style('top', d => `${this._program._boxes[d].y}px`)
 	}
 }
