@@ -3,25 +3,25 @@
 // written into plugs)
 
 export class APGData {
-	constructor () {
-		if (new.target === APGData) {
-			throw new Error('cannot instantiate abstract APGData class')
-		}
+  constructor () {
+    if (new.target === APGData) {
+      throw new Error('cannot instantiate abstract APGData class')
+    }
 
-		if (new.target.prototype.equals === APGData.prototype.equals) {
-			throw new Error('subclass of APGData must implement method equals')
-		}
+    if (new.target.prototype.equals === APGData.prototype.equals) {
+      throw new Error('subclass of APGData must implement method equals')
+    }
 
-		if (new.target.prototype.clone === APGData.prototype.clone) {
-			throw new Error('subclass of APGData must implement method clone')
-		}
+    if (new.target.prototype.clone === APGData.prototype.clone) {
+      throw new Error('subclass of APGData must implement method clone')
+    }
 
-		if (new.target.prototype.freeze === APGData.prototype.freeze) {
-			throw new Error('subclass of APGData must implement method freeze')
-		}
-	}
+    if (new.target.prototype.freeze === APGData.prototype.freeze) {
+      throw new Error('subclass of APGData must implement method freeze')
+    }
+  }
 
-	equals (other) {}
-	clone () {}
-	freeze () {}
+  equals (other) {}
+  clone () {}
+  freeze () {}
 }
