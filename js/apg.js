@@ -57,8 +57,10 @@ export class APG {
 		            .classed('title', true)
 		            .text(d => d)
 		            .call(d3.drag().on('drag', () => {
-		              this._program._boxes[d3.event.subject].x += d3.event.x
-		              this._program._boxes[d3.event.subject].y += d3.event.y
+		              let box = d3.event.subject
+		              let {movementX, movementY} = d3.event.sourceEvent
+		              this._program._boxes[box].x += movementX
+		              this._program._boxes[box].y += movementY
 		              this.refreshProgram()
 		            }))
 
