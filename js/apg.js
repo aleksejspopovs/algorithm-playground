@@ -20,6 +20,16 @@ export class APG {
           toolbox.classed('visible', !toolbox.classed('visible'))
         }
       })
+
+    // when non-empty, this is an object with either two properties
+    // (srcBox, srcPlug) or two properties (destBox, destPlug)
+    this._pendingWire = {}
+    document.addEventListener('mousedown', (e) => {
+      // TODO: this will need fixing when we implement workspace panning
+      if (!d3.select(e.target).classed('plug')) {
+        this._pendingWire = {}
+      }
+    }, true)
   }
 
   getNodeForBox (id) {
@@ -58,12 +68,23 @@ export class APG {
 
           // input plugs
           node.append('ul')
-                .classed('input-plugs', true)
+                .classed('input-plugs-list', true)
               .selectAll('li')
               .data(d => this._program._boxes[d].object._inputOrder.map(p => [d, p]))
               .join('li')
+                .classed('plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-input-${p}`)
                 .text(([_, p]) => p)
+                .on('click', () => {
+                  let [destBox, destPlug] = d3.select(d3.event.srcElement).data()[0]
+                  if (this._pendingWire.srcBox !== undefined) {
+                    let {srcBox, srcPlug} = this._pendingWire
+                    this._program.addWire(srcBox, srcPlug, destBox, destPlug)
+                    this._pendingWire = {}
+                  } else {
+                    this._pendingWire = {destBox, destPlug}
+                  }
+                })
 
           // title
           node.append('div')
@@ -83,12 +104,23 @@ export class APG {
 
           // output plugs
           node.append('ul')
-                .classed('output-plugs', true)
+                .classed('output-plugs-list', true)
               .selectAll('li')
               .data(d => this._program._boxes[d].object._outputOrder.map(p => [d, p]))
               .join('li')
+                .classed('plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-output-${p}`)
                 .text(([_, p]) => p)
+                .on('click', () => {
+                  let [srcBox, srcPlug] = d3.select(d3.event.srcElement).data()[0]
+                  if (this._pendingWire.destBox !== undefined) {
+                    let {destBox, destPlug} = this._pendingWire
+                    this._program.addWire(srcBox, srcPlug, destBox, destPlug)
+                    this._pendingWire = {}
+                  } else {
+                    this._pendingWire = {srcBox, srcPlug}
+                  }
+                })
 
           return node
         }
