@@ -1,5 +1,6 @@
 // assumes d3.js is imported
 import {APGProgram} from './program.js'
+import BoxIndex from './boxes/index.js'
 
 export class APG {
 	constructor (root) {
@@ -7,6 +8,18 @@ export class APG {
 		this._program = new APGProgram(this)
 
 		this._wireRoot = d3.select(this._root).append('svg').node()
+
+		this._toolboxRoot = d3.select(this._root).append('div').classed('toolbox', true).node()
+		d3.select(this._toolboxRoot).append('ul')
+		this.refreshToolbox()
+
+		d3.select('body')
+		  .on('keypress', () => {
+		    if (d3.event.code === 'KeyQ') {
+		      let toolbox = d3.select(this._toolboxRoot)
+		      toolbox.classed('visible', !toolbox.classed('visible'))
+		    }
+		  })
 	}
 
 	getNodeForBox (id) {
@@ -101,5 +114,29 @@ export class APG {
             .attr('y1', d => locatePlug(d, 'src', 'y') + 10)
             .attr('x2', d => locatePlug(d, 'dest', 'x') - 14)
             .attr('y2', d => locatePlug(d, 'dest', 'y') + 10)
+	}
+
+	refreshToolbox () {
+		d3.select(this._toolboxRoot)
+		  .select('ul')
+		  .selectAll('li.toolbox-group')
+		  .data(BoxIndex)
+		  .join(enter => {
+		    let node = enter.append('li')
+		      .classed('toolbox-group', true)
+		      .text(([group, _]) => group)
+		    node.append('ul')
+		    return node
+		  })
+		  .select('ul')
+		  .selectAll('li.toolbox-item')
+		  .data(([_, items]) => items)
+		  .join('li')
+		    .classed('toolbox-item', true)
+		    .text(d => d.name)
+		    .on('click', () => {
+		      let box = d3.select(d3.event.srcElement).data()[0]
+		      this._program.addBox(new box())
+		    })
 	}
 }
