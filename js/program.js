@@ -25,11 +25,11 @@ export class APGProgram {
 	}
 
 	generateBoxId () {
-		return generateUnusedKey(this._boxes, 'box_')
+		return generateUnusedKey(this._boxes, 'box')
 	}
 
 	generateWireId () {
-		return generateUnusedKey(this._wires, 'wire_')
+		return generateUnusedKey(this._wires, 'wire')
 	}
 
 	addBox (box, id = null, x = 0, y = 0) {
