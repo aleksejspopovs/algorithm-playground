@@ -161,13 +161,16 @@ export class APG {
     d3.select(this._wireRoot)
         .attr('width', window.innerWidth)
         .attr('height', window.innerHeight)
-      .selectAll('line')
+      .selectAll('path')
       .data(Object.keys(this._program._wires))
-      .join('line')
-        .attr('x1', d => locatePlug(d, 'src', 'x') - 14)
-        .attr('y1', d => locatePlug(d, 'src', 'y') + 10)
-        .attr('x2', d => locatePlug(d, 'dest', 'x') - 14)
-        .attr('y2', d => locatePlug(d, 'dest', 'y') + 10)
+      .join('path')
+        .attr('d', (d) => {
+          let x1 = locatePlug(d, 'src', 'x') - 14
+          let y1 = locatePlug(d, 'src', 'y') + 10
+          let x2 = locatePlug(d, 'dest', 'x') - 14
+          let y2 = locatePlug(d, 'dest', 'y') + 10
+          return `M${x1},${y1} C${x1-10},${y1} ${x2-10},${y2} ${x2},${y2}`
+        })
   }
 
   refreshToolbox () {
