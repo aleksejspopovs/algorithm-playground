@@ -81,6 +81,10 @@ export class APGProgram {
 		if (srcPlugObj._value !== null) {
 			this.schedulePlugUpdate(destBox, destPlug, srcPlugObj._value)
 		}
+
+		this.scheduleProgramRefresh()
+
+		return id
 	}
 
 	scheduleProcessing (boxId, f) {

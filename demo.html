@@ -5,10 +5,26 @@
 		<script src='js/vendor/d3.min.js'></script>
 	    <script type='module' src='js/demo.js'></script>
 	    <style>
+body {
+	margin: 0px;
+	overflow: hidden;
+}
+
+svg {
+	position: absolute;
+	z-index: 1;
+	pointer-events: none;
+}
+
+svg line {
+	stroke: black;
+}
+
 .box {
 	border: 1px solid black;
 	display: inline-block;
 	position: absolute;
+	background: white;
 }
 
 .box .title {
