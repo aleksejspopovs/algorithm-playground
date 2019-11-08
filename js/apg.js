@@ -28,6 +28,7 @@ export class APG {
       // TODO: this will need fixing when we implement workspace panning
       if (!d3.select(e.target).classed('plug')) {
         this._pendingWire = {}
+        this.refreshProgram()
       }
     }, true)
   }
@@ -52,6 +53,7 @@ export class APG {
   }
 
   refreshProgram () {
+    // draw boxes
     d3.select(this._root)
       .selectAll('div.box')
       .data(
@@ -72,7 +74,7 @@ export class APG {
               .selectAll('li')
               .data(d => this._program._boxes[d].object._inputOrder.map(p => [d, p]))
               .join('li')
-                .classed('plug', true)
+                .classed('plug input-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-input-${p}`)
                 .text(([_, p]) => p)
                 .on('click', () => {
@@ -84,6 +86,7 @@ export class APG {
                   } else {
                     this._pendingWire = {destBox, destPlug}
                   }
+                  this.refreshProgram()
                 })
 
           // title
@@ -108,7 +111,7 @@ export class APG {
               .selectAll('li')
               .data(d => this._program._boxes[d].object._outputOrder.map(p => [d, p]))
               .join('li')
-                .classed('plug', true)
+                .classed('plug output-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-output-${p}`)
                 .text(([_, p]) => p)
                 .on('click', () => {
@@ -120,6 +123,7 @@ export class APG {
                   } else {
                     this._pendingWire = {srcBox, srcPlug}
                   }
+                  this.refreshProgram()
                 })
 
           return node
@@ -128,6 +132,22 @@ export class APG {
         .style('left', d => `${this._program._boxes[d].x}px`)
         .style('top', d => `${this._program._boxes[d].y}px`)
 
+    // highlight the endpoint of the current pending wire (if any)
+    d3.select(this._root)
+      .selectAll('li.output-plug')
+      .classed('selected',
+        ([d, p]) =>
+          (d === this._pendingWire.srcBox) && (p === this._pendingWire.srcPlug)
+      )
+
+    d3.select(this._root)
+      .selectAll('li.input-plug')
+      .classed('selected',
+        ([d, p]) =>
+          (d === this._pendingWire.destBox) && (p === this._pendingWire.destPlug)
+      )
+
+    // helper function for drawing wires between plugs
     let locatePlug = (wireName, end, coord) => {
       let wire = this._program._wires[wireName]
       let boxName = wire[`${end}Box`]
@@ -137,6 +157,7 @@ export class APG {
       return element.getBoundingClientRect()[coord]
     }
 
+    // draw wires
     d3.select(this._wireRoot)
         .attr('width', window.innerWidth)
         .attr('height', window.innerHeight)
