@@ -68,7 +68,7 @@ export class APGProgram {
 			throw new Error(`cannot add wire with duplicate id ${id}`)
 		}
 
-		this._wires[id] = {box: destBox, plug: destPlug}
+		this._wires[id] = {srcBox, srcPlug, destBox, destPlug}
 
 		let srcPlugFullName = qualifiedPlugName(srcBox, srcPlug)
 		if (!this._wiresByPlug.hasOwnProperty(srcPlugFullName)) {
@@ -123,8 +123,8 @@ export class APGProgram {
 		}
 
 		for (let wire of this._wiresByPlug[plugFullName]) {
-			let {box, plug} = this._wires[wire]
-			this.schedulePlugUpdate(box, plug, value)
+			let {destBox, destPlug} = this._wires[wire]
+			this.schedulePlugUpdate(destBox, destPlug, value)
 		}
 	}
 
