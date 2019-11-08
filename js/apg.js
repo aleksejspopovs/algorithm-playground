@@ -29,7 +29,6 @@ export class APG {
 	}
 
 	refreshProgram () {
-		console.log('refreshing program')
 		d3.select(this._root)
 		  .selectAll('div.box')
 		  .data(
