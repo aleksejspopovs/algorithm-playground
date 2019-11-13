@@ -47,6 +47,16 @@ export class APGProgram {
     this._boxes[id] = new BoxWithMetadata(box, x, y)
     box.attachToProgram(this, id)
 
+    // create entries in this._wiresByPlug for each plug
+    let allPlugs = (
+      box._inputOrder.map(x => ['in', x])
+      .concat(box._outputOrder.map(x => ['out', x]))
+    )
+    for (let [dir, plugName] of allPlugs) {
+      let fullName = qualifiedPlugName(id, dir, plugName)
+      this._wiresByPlug[fullName] = new Set()
+    }
+
     this.scheduleProgramRefresh()
     this.scheduleBoxRefresh(id)
 
@@ -67,16 +77,8 @@ export class APGProgram {
     )
     for (let [dir, plugName] of allPlugs) {
       let fullName = qualifiedPlugName(id, dir, plugName)
-      if (!this._wiresByPlug.hasOwnProperty(fullName)) {
-        continue
-      }
-
       this._wiresByPlug[fullName].forEach(x => this.deleteWire(x))
     }
-
-    // we might leave behind some entries in this._wiresByPlug
-    // corresponding to plugs of the deleted box, but that's
-    // okay because they are empty.
 
     delete this._boxes[id]
 
@@ -108,16 +110,9 @@ export class APGProgram {
     this._wires[id] = {srcBox, srcPlug, destBox, destPlug}
 
     let srcPlugFullName = qualifiedPlugName(srcBox, 'out', srcPlug)
-    // TODO: just create these when registering the box instead
-    if (!this._wiresByPlug.hasOwnProperty(srcPlugFullName)) {
-      this._wiresByPlug[srcPlugFullName] = new Set()
-    }
     this._wiresByPlug[srcPlugFullName].add(id)
 
     let destPlugFullName = qualifiedPlugName(destBox, 'in', destPlug)
-    if (!this._wiresByPlug.hasOwnProperty(destPlugFullName)) {
-      this._wiresByPlug[destPlugFullName] = new Set()
-    }
     this._wiresByPlug[destPlugFullName].add(id)
 
     // update dest value if src value not null
@@ -183,9 +178,6 @@ export class APGProgram {
 
   schedulePlugUpdatesFrom (boxId, plugName, value) {
     let plugFullName = qualifiedPlugName(boxId, 'out', plugName)
-    if (!this._wiresByPlug.hasOwnProperty(plugFullName)) {
-      return
-    }
 
     for (let [_, wire] of this._wiresByPlug[plugFullName].entries()) {
       let {destBox, destPlug} = this._wires[wire]
