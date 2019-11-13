@@ -193,7 +193,9 @@ export class APG {
         .text(d => d.name)
         .on('click', () => {
           let box = d3.select(d3.event.srcElement).data()[0]
-          this._program.addBox(new box())
+
+          d3.select(this._toolboxRoot).classed('visible', false)
+          let boxId = this._program.addBox(new box(), null, d3.event.x, d3.event.y)
         })
   }
 }
