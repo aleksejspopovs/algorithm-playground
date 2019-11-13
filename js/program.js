@@ -1,8 +1,13 @@
 import {generateUnusedKey} from './utils/objects.js'
 import {TwoPriorityQueue} from './utils/queue.js'
 
-function qualifiedPlugName(boxId, plugName) {
-  return `${boxId}->${plugName}`
+function qualifiedPlugName(boxId, dir, plugName) {
+  if (dir === 'in') {
+    return `${plugName}->[${boxId}]`
+  } else if (dir === 'out') {
+    return `[${boxId}]->${plugName}`
+  }
+  throw new Error(`invalid plug direction ${dir}`)
 }
 
 class BoxWithMetadata {
@@ -48,6 +53,38 @@ export class APGProgram {
     return id
   }
 
+  deleteBox (id) {
+    if (!this._boxes.hasOwnProperty(id)) {
+      throw new Error(`no box with id ${id} found`)
+    }
+
+    let box = this._boxes[id].object
+
+    // remove all wires
+    let allPlugs = (
+      box._inputOrder.map(x => ['in', x])
+      .concat(box._outputOrder.map(x => ['out', x]))
+    )
+    for (let [dir, plugName] of allPlugs) {
+      let fullName = qualifiedPlugName(id, dir, plugName)
+      if (!this._wiresByPlug.hasOwnProperty(fullName)) {
+        continue
+      }
+
+      this._wiresByPlug[fullName].forEach(x => this.deleteWire(x))
+    }
+
+    // we might leave behind some entries in this._wiresByPlug
+    // corresponding to plugs of the deleted box, but that's
+    // okay because they are empty.
+
+    delete this._boxes[id]
+
+    // TODO: each call to deleteWire also scheduled a refresh,
+    // any way to dedup?
+    this.scheduleProgramRefresh()
+  }
+
   addWire (srcBox, srcPlug, destBox, destPlug, id = null) {
     if (!this._boxes.hasOwnProperty(srcBox)) {
       throw new Error(`source box ${srcBox} does not exist`)
@@ -70,11 +107,18 @@ export class APGProgram {
 
     this._wires[id] = {srcBox, srcPlug, destBox, destPlug}
 
-    let srcPlugFullName = qualifiedPlugName(srcBox, srcPlug)
+    let srcPlugFullName = qualifiedPlugName(srcBox, 'out', srcPlug)
+    // TODO: just create these when registering the box instead
     if (!this._wiresByPlug.hasOwnProperty(srcPlugFullName)) {
-      this._wiresByPlug[srcPlugFullName] = []
+      this._wiresByPlug[srcPlugFullName] = new Set()
     }
-    this._wiresByPlug[srcPlugFullName].push(id)
+    this._wiresByPlug[srcPlugFullName].add(id)
+
+    let destPlugFullName = qualifiedPlugName(destBox, 'in', destPlug)
+    if (!this._wiresByPlug.hasOwnProperty(destPlugFullName)) {
+      this._wiresByPlug[destPlugFullName] = new Set()
+    }
+    this._wiresByPlug[destPlugFullName].add(id)
 
     // update dest value if src value not null
     let srcPlugObj = this._boxes[srcBox].object.output[srcPlug]
@@ -85,6 +129,23 @@ export class APGProgram {
     this.scheduleProgramRefresh()
 
     return id
+  }
+
+  deleteWire (id) {
+    if (!this._wires.hasOwnProperty(id)) {
+      throw new Error(`no wire with id ${id} found`)
+    }
+
+    let wire = this._wires[id]
+    let srcPlugFullName = qualifiedPlugName(wire.srcBox, 'out', wire.srcPlug)
+    this._wiresByPlug[srcPlugFullName].delete(id)
+
+    let destPlugFullName = qualifiedPlugName(wire.destBox, 'in', wire.destPlug)
+    this._wiresByPlug[destPlugFullName].delete(id)
+
+    delete this._wires[id]
+
+    this.scheduleProgramRefresh()
   }
 
   scheduleProcessing (boxId, f) {
@@ -121,12 +182,12 @@ export class APGProgram {
   }
 
   schedulePlugUpdatesFrom (boxId, plugName, value) {
-    let plugFullName = qualifiedPlugName(boxId, plugName)
+    let plugFullName = qualifiedPlugName(boxId, 'out', plugName)
     if (!this._wiresByPlug.hasOwnProperty(plugFullName)) {
       return
     }
 
-    for (let wire of this._wiresByPlug[plugFullName]) {
+    for (let [_, wire] of this._wiresByPlug[plugFullName].entries()) {
       let {destBox, destPlug} = this._wires[wire]
       this.schedulePlugUpdate(destBox, destPlug, value)
     }

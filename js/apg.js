@@ -93,6 +93,13 @@ export class APG {
           node.append('div')
                 .classed('title', true)
                 .text(d => d)
+                .on('click', () => {
+                  if (d3.event.altKey) {
+                    // delete box
+                    let boxId = d3.select(d3.event.srcElement).data()[0]
+                    this._program.deleteBox(boxId)
+                  }
+                })
                 .call(d3.drag().on('drag', () => {
                   let box = d3.event.subject
                   let {movementX, movementY} = d3.event.sourceEvent
@@ -171,6 +178,13 @@ export class APG {
           let y2 = locatePlug(d, 'dest', 'y') + 10
           return `M${x1},${y1} C${x1-10},${y1} ${x2-10},${y2} ${x2},${y2}`
         })
+        .on('click', () => {
+          if (d3.event.altKey) {
+            // delete wire
+            let wireId = d3.select(d3.event.srcElement).data()[0]
+            this._program.deleteWire(wireId)
+          }
+        })
   }
 
   refreshToolbox () {
@@ -195,7 +209,7 @@ export class APG {
           let box = d3.select(d3.event.srcElement).data()[0]
 
           d3.select(this._toolboxRoot).classed('visible', false)
-          let boxId = this._program.addBox(new box(), null, d3.event.x, d3.event.y)
+          let boxId = this._program.addBox(new box()), null, d3.event.x, d3.event.y)
         })
   }
 }
