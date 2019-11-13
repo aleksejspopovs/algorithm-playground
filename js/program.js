@@ -45,7 +45,6 @@ export class APGProgram {
     }
 
     this._boxes.set(id, new BoxWithMetadata(box, x, y))
-    box.attachToProgram(this, id)
 
     // create entries in this._wiresByPlug for each plug
     let allPlugs = (
@@ -56,6 +55,8 @@ export class APGProgram {
       let fullName = qualifiedPlugName(id, dir, plugName)
       this._wiresByPlug[fullName] = new Set()
     }
+
+    box.attachToProgram(this, id)
 
     this.scheduleProgramRefresh()
     this.scheduleBoxRefresh(id)
