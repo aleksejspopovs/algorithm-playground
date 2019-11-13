@@ -45,7 +45,7 @@ export class APG {
   }
 
   refreshBox (id) {
-    let box = this._program._boxes[id].object
+    let box = this._program.getBox(id)
     let node = this.getNodeForBox(id)
     if (node) {
       box.render(node)
@@ -57,7 +57,7 @@ export class APG {
     d3.select(this._root)
       .selectAll('div.box')
       .data(
-        Object.keys(this._program._boxes),
+        Array.from(this._program._boxes.keys()),
         // this needs to be a regular function because `this`
         // works differently for lambdas
         function (d) { return d ? d : `box-${this.id}` }
@@ -72,7 +72,7 @@ export class APG {
           node.append('ul')
                 .classed('input-plugs-list', true)
               .selectAll('li')
-              .data(d => this._program._boxes[d].object._inputOrder.map(p => [d, p]))
+              .data(d => this._program.getBox(d)._inputOrder.map(p => [d, p]))
               .join('li')
                 .classed('plug input-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-input-${p}`)
@@ -103,8 +103,8 @@ export class APG {
                 .call(d3.drag().on('drag', () => {
                   let box = d3.event.subject
                   let {movementX, movementY} = d3.event.sourceEvent
-                  this._program._boxes[box].x += movementX
-                  this._program._boxes[box].y += movementY
+                  this._program._boxes.get(box).x += movementX
+                  this._program._boxes.get(box).y += movementY
                   this.refreshProgram()
                 }))
 
@@ -116,7 +116,7 @@ export class APG {
           node.append('ul')
                 .classed('output-plugs-list', true)
               .selectAll('li')
-              .data(d => this._program._boxes[d].object._outputOrder.map(p => [d, p]))
+              .data(d => this._program.getBox(d)._outputOrder.map(p => [d, p]))
               .join('li')
                 .classed('plug output-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-output-${p}`)
@@ -136,8 +136,8 @@ export class APG {
           return node
         }
       )
-        .style('left', d => `${this._program._boxes[d].x}px`)
-        .style('top', d => `${this._program._boxes[d].y}px`)
+        .style('left', d => `${this._program._boxes.get(d).x}px`)
+        .style('top', d => `${this._program._boxes.get(d).y}px`)
 
     // highlight the endpoint of the current pending wire (if any)
     d3.select(this._root)
@@ -156,7 +156,7 @@ export class APG {
 
     // helper function for drawing wires between plugs
     let locatePlug = (wireName, end, coord) => {
-      let wire = this._program._wires[wireName]
+      let wire = this._program._wires.get(wireName)
       let boxName = wire[`${end}Box`]
       let plugName = wire[`${end}Plug`]
       let io = (end === 'src') ? 'output' : 'input'
@@ -169,7 +169,7 @@ export class APG {
         .attr('width', window.innerWidth)
         .attr('height', window.innerHeight)
       .selectAll('path')
-      .data(Object.keys(this._program._wires))
+      .data(Array.from(this._program._wires.keys()))
       .join('path')
         .attr('d', (d) => {
           let x1 = locatePlug(d, 'src', 'x') - 14

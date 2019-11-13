@@ -21,8 +21,8 @@ class BoxWithMetadata {
 export class APGProgram {
   constructor (apg) {
     this._apg = apg
-    this._boxes = {}
-    this._wires = {}
+    this._boxes = new Map()
+    this._wires = new Map()
     this._wiresByPlug = {}
 
     this._workQueue = new TwoPriorityQueue()
@@ -40,11 +40,11 @@ export class APGProgram {
   addBox (box, id = null, x = 0, y = 0) {
     id = id || this.generateBoxId()
 
-    if (this._boxes.hasOwnProperty(id)) {
+    if (this._boxes.has(id)) {
       throw new Error(`cannot add box with duplicate id ${id}`)
     }
 
-    this._boxes[id] = new BoxWithMetadata(box, x, y)
+    this._boxes.set(id, new BoxWithMetadata(box, x, y))
     box.attachToProgram(this, id)
 
     // create entries in this._wiresByPlug for each plug
@@ -64,11 +64,11 @@ export class APGProgram {
   }
 
   deleteBox (id) {
-    if (!this._boxes.hasOwnProperty(id)) {
+    if (!this._boxes.has(id)) {
       throw new Error(`no box with id ${id} found`)
     }
 
-    let box = this._boxes[id].object
+    let box = this._boxes.get(id).object
 
     // remove all wires
     let allPlugs = (
@@ -80,34 +80,42 @@ export class APGProgram {
       this._wiresByPlug[fullName].forEach(x => this.deleteWire(x))
     }
 
-    delete this._boxes[id]
+    this._boxes.delete(id)
 
     // TODO: each call to deleteWire also scheduled a refresh,
     // any way to dedup?
     this.scheduleProgramRefresh()
   }
 
+  getBox (id) {
+    if (!this._boxes.has(id)) {
+      throw new Error(`no box with id ${id} found`)
+    }
+
+    return this._boxes.get(id).object
+  }
+
   addWire (srcBox, srcPlug, destBox, destPlug, id = null) {
-    if (!this._boxes.hasOwnProperty(srcBox)) {
+    if (!this._boxes.has(srcBox)) {
       throw new Error(`source box ${srcBox} does not exist`)
     }
-    if (!this._boxes[srcBox].object.output.hasOwnProperty(srcPlug)) {
+    if (!this._boxes.get(srcBox).object.output.hasOwnProperty(srcPlug)) {
       throw new Error(`source box ${srcBox} does not have an output plug ${srcPlug}`)
     }
-    if (!this._boxes.hasOwnProperty(destBox)) {
+    if (!this._boxes.has(destBox)) {
       throw new Error(`destination box ${destBox} does not exist`)
     }
-    if (!this._boxes[destBox].object.input.hasOwnProperty(destPlug)) {
+    if (!this._boxes.get(destBox).object.input.hasOwnProperty(destPlug)) {
       throw new Error(`destination box ${destBox} does not have an input plug ${destPlug}`)
     }
 
     id = id || this.generateWireId()
 
-    if (this._wires.hasOwnProperty(id)) {
+    if (this._wires.has(id)) {
       throw new Error(`cannot add wire with duplicate id ${id}`)
     }
 
-    this._wires[id] = {srcBox, srcPlug, destBox, destPlug}
+    this._wires.set(id, {srcBox, srcPlug, destBox, destPlug})
 
     let srcPlugFullName = qualifiedPlugName(srcBox, 'out', srcPlug)
     this._wiresByPlug[srcPlugFullName].add(id)
@@ -116,7 +124,7 @@ export class APGProgram {
     this._wiresByPlug[destPlugFullName].add(id)
 
     // update dest value if src value not null
-    let srcPlugObj = this._boxes[srcBox].object.output[srcPlug]
+    let srcPlugObj = this._boxes.get(srcBox).object.output[srcPlug]
     if (srcPlugObj._value !== null) {
       this.schedulePlugUpdate(destBox, destPlug, srcPlugObj._value)
     }
@@ -127,32 +135,32 @@ export class APGProgram {
   }
 
   deleteWire (id) {
-    if (!this._wires.hasOwnProperty(id)) {
+    if (!this._wires.has(id)) {
       throw new Error(`no wire with id ${id} found`)
     }
 
-    let wire = this._wires[id]
+    let wire = this._wires.get(id)
     let srcPlugFullName = qualifiedPlugName(wire.srcBox, 'out', wire.srcPlug)
     this._wiresByPlug[srcPlugFullName].delete(id)
 
     let destPlugFullName = qualifiedPlugName(wire.destBox, 'in', wire.destPlug)
     this._wiresByPlug[destPlugFullName].delete(id)
 
-    delete this._wires[id]
+    this._wires.delete(id)
 
     this.scheduleProgramRefresh()
   }
 
   scheduleProcessing (boxId, f) {
     this._workQueue.pushRegular(() => {
-      if (this._boxes[boxId].object._isProcessing) {
+      if (this._boxes.get(boxId).object._isProcessing) {
         throw new Error('trying to enter processing mode on box already in it')
       }
-      this._boxes[boxId].object._isProcessing = true
+      this._boxes.get(boxId).object._isProcessing = true
       try {
         f()
       } finally {
-        this._boxes[boxId].object._isProcessing = false
+        this._boxes.get(boxId).object._isProcessing = false
         this.scheduleBoxRefresh(boxId)
       }
     })
@@ -172,7 +180,7 @@ export class APGProgram {
   schedulePlugUpdate (boxId, plugName, value) {
     this.scheduleProcessing(
       boxId,
-      () => this._boxes[boxId].object.input[plugName]._write(value)
+      () => this._boxes.get(boxId).object.input[plugName]._write(value)
     )
   }
 
@@ -180,7 +188,7 @@ export class APGProgram {
     let plugFullName = qualifiedPlugName(boxId, 'out', plugName)
 
     for (let [_, wire] of this._wiresByPlug[plugFullName].entries()) {
-      let {destBox, destPlug} = this._wires[wire]
+      let {destBox, destPlug} = this._wires.get(wire)
       this.schedulePlugUpdate(destBox, destPlug, value)
     }
   }
