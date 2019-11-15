@@ -17,6 +17,7 @@ export class APGBox {
 
   processMessage (plugName, message) {}
   processEvent (event) {}
+  createLayout () {}
   render (node) {}
 
   newInputPlug (name, updateHandler = null) {

@@ -109,8 +109,24 @@ export class APG {
                 }))
 
           // render area
+          // because of javascript scope/`this` shenanigans, we need to use an
+          // old-style anonymous function below, and its `this` will be bound
+          // to the current DOM element, so we need to retain a reference to
+          // the APG object.
+          let self = this
           node.append('div')
                 .classed('inner', true)
+              .select(function (d) {
+                // conditionally initialize the layout, if the box wants that.
+                // we have to use this .select trick instead of just calling
+                // .append since that doesn't deal well with a return value of
+                // null or undefined.
+                let layout = self._program.getBox(d).createLayout()
+                if (layout) {
+                  return this.appendChild(layout)
+                }
+                return null
+              })
 
           // output plugs
           node.append('ul')
