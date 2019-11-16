@@ -8,6 +8,10 @@ export class Spinner extends APGBox {
     this.scheduleProcessing(() => this.output.value.write(0))
   }
 
+  static metadata () {
+    return {category: 'primitive_io', name: 'spinner'}
+  }
+
   createLayout () {
     let new_input = document.createElement('input')
     new_input.type = 'number'

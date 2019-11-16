@@ -7,6 +7,10 @@ export class Hold extends APGBox {
     this.newOutputPlug('value')
   }
 
+  static metadata () {
+    return {category: 'data_flow', name: 'hold'}
+  }
+
   createLayout () {
     let button = document.createElement('button')
     button.innerText = 'push'

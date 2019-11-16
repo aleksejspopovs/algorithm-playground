@@ -7,6 +7,10 @@ export class STVisualizer extends APGBox {
     this.newInputPlug('tree')
   }
 
+  static metadata () {
+    return {category: 'segment_tree', name: 'visualizer'}
+  }
+
   render (node) {
     let tree = this.input.tree.read()
     let output = (tree !== null) ? tree.toString() : 'no tree'
@@ -21,6 +25,10 @@ export class STUpdater extends APGBox {
     this.newInputPlug('index', this.processInput)
     this.newInputPlug('value', this.processInput)
     this.newOutputPlug('tree')
+  }
+
+  static metadata () {
+    return {category: 'segment_tree', name: 'updater'}
   }
 
   processInput () {
@@ -43,5 +51,9 @@ export class STInitializer extends APGBox {
     super()
     this.newOutputPlug('tree')
     this.scheduleProcessing(() => this.output.tree.write(new SegmentTree(0, 7)))
+  }
+
+  static metadata () {
+    return {category: 'segment_tree', name: 'initializer'}
   }
 }

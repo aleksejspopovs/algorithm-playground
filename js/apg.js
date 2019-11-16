@@ -1,17 +1,23 @@
 // assumes d3.js is imported
 import {APGProgram} from './program.js'
-import BoxIndex from './boxes/index.js'
+import {BoxCategories} from './boxes/index.js'
 
 export class APG {
   constructor (root) {
     this._root = root
-    this._program = new APGProgram(this)
+
+    let savedProgram = window.localStorage.program
+    if (savedProgram === undefined) {
+      this._program = new APGProgram()
+    } else {
+      this._program = APGProgram.load(savedProgram)
+    }
+    this._program.attachToUi(this)
 
     this._wireRoot = d3.select(this._root).append('svg').node()
 
     this._toolboxRoot = d3.select(this._root).append('div').classed('toolbox', true).node()
     d3.select(this._toolboxRoot).append('ul')
-    this.refreshToolbox()
 
     d3.select('body')
       .on('keypress', () => {
@@ -31,6 +37,10 @@ export class APG {
         this.refreshProgram()
       }
     }, true)
+
+    this.refreshToolbox()
+    this.refreshProgram()
+    this.refreshAllBoxes()
   }
 
   getNodeForBox (id) {
@@ -50,6 +60,10 @@ export class APG {
     if (node) {
       box.render(node)
     }
+  }
+
+  refreshAllBoxes () {
+    this._program._boxes.forEach((_, id) => this.refreshBox(id))
   }
 
   refreshProgram () {
@@ -82,6 +96,7 @@ export class APG {
                   if (this._pendingWire.srcBox !== undefined) {
                     let {srcBox, srcPlug} = this._pendingWire
                     this._program.addWire(srcBox, srcPlug, destBox, destPlug)
+                    this.saveProgram()
                     this._pendingWire = {}
                   } else {
                     this._pendingWire = {destBox, destPlug}
@@ -98,15 +113,20 @@ export class APG {
                     // delete box
                     let boxId = d3.select(d3.event.srcElement).data()[0]
                     this._program.deleteBox(boxId)
+
+                    this.saveProgram()
                   }
                 })
-                .call(d3.drag().on('drag', () => {
-                  let box = d3.event.subject
-                  let {movementX, movementY} = d3.event.sourceEvent
-                  this._program._boxes.get(box).x += movementX
-                  this._program._boxes.get(box).y += movementY
-                  this.refreshProgram()
-                }))
+                .call(d3.drag()
+                  .on('drag', () => {
+                    let box = d3.event.subject
+                    let {movementX, movementY} = d3.event.sourceEvent
+                    this._program._boxes.get(box).x += movementX
+                    this._program._boxes.get(box).y += movementY
+                    this.refreshProgram()
+                  })
+                  .on('end', () => {this.saveProgram()})
+                )
 
           // render area
           // because of javascript scope/`this` shenanigans, we need to use an
@@ -142,6 +162,7 @@ export class APG {
                   if (this._pendingWire.destBox !== undefined) {
                     let {destBox, destPlug} = this._pendingWire
                     this._program.addWire(srcBox, srcPlug, destBox, destPlug)
+                    this.saveProgram()
                     this._pendingWire = {}
                   } else {
                     this._pendingWire = {srcBox, srcPlug}
@@ -199,6 +220,7 @@ export class APG {
             // delete wire
             let wireId = d3.select(d3.event.srcElement).data()[0]
             this._program.deleteWire(wireId)
+            this.saveProgram()
           }
         })
   }
@@ -207,7 +229,7 @@ export class APG {
     d3.select(this._toolboxRoot)
       .select('ul')
       .selectAll('li.toolbox-group')
-      .data(BoxIndex)
+      .data(Array.from(BoxCategories.entries()))
       .join(enter => {
         let node = enter.append('li')
         node.classed('toolbox-group', true)
@@ -220,13 +242,19 @@ export class APG {
       .data(([_, items]) => items)
       .join('li')
         .classed('toolbox-item', true)
-        .text(d => d.name)
+        .text(d => d.metadata().name)
         .on('click', () => {
           let box = d3.select(d3.event.srcElement).data()[0]
 
           d3.select(this._toolboxRoot).classed('visible', false)
           // TODO: make this stick to the pointer until placed, or something
           let boxId = this._program.addBox(new box(), null, d3.event.x - 100, d3.event.y - 100)
+
+          this.saveProgram()
         })
+  }
+
+  saveProgram () {
+    window.localStorage.program = this._program.save()
   }
 }

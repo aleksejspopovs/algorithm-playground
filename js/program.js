@@ -1,5 +1,6 @@
 import {generateUnusedKey} from './utils/objects.js'
 import {TwoPriorityQueue} from './utils/queue.js'
+import {BoxIndex} from './boxes/index.js'
 
 function qualifiedPlugName(boxId, dir, plugName) {
   if (dir === 'in') {
@@ -19,14 +20,18 @@ class BoxWithMetadata {
 }
 
 export class APGProgram {
-  constructor (apg) {
-    this._apg = apg
+  constructor () {
+    this._apg = null
     this._boxes = new Map()
     this._wires = new Map()
     this._wiresByPlug = {}
 
     this._workQueue = new TwoPriorityQueue()
     this._workHappening = false
+  }
+
+  attachToUi (apg) {
+    this._apg = apg
   }
 
   generateBoxId () {
@@ -169,11 +174,17 @@ export class APGProgram {
   }
 
   scheduleProgramRefresh () {
+    if (!this._apg) {
+      return
+    }
     this._workQueue.pushPrioritized(() => this._apg.refreshProgram())
     this.performWork()
   }
 
   scheduleBoxRefresh (boxId) {
+    if (!this._apg) {
+      return
+    }
     this._workQueue.pushPrioritized(() => this._apg.refreshBox(boxId))
     this.performWork()
   }
@@ -194,7 +205,7 @@ export class APGProgram {
     }
   }
 
-  performWork() {
+  performWork () {
     if (this._workHappening) {
       return
     }
@@ -218,5 +229,31 @@ export class APGProgram {
     this._workHappening = false
 
     console.log('done with the processing loop')
+  }
+
+  save () {
+    let serialized = {}
+    serialized.boxes = []
+    for (let [id, box] of this._boxes.entries()) {
+      serialized.boxes.push({id: id, x: box.x, y: box.y, type: box.object.constructor._typeId()})
+    }
+    serialized.wires = Array.from(
+      this._wires.entries(),
+      ([id, wire]) => ({id, ...wire})
+    )
+    return JSON.stringify(serialized)
+  }
+
+  static load (string) {
+    let {boxes, wires} = JSON.parse(string)
+    let program = new APGProgram()
+    for (let {id, x, y, type} of boxes) {
+      let boxType = BoxIndex.get(type)
+      program.addBox(new boxType(), id, x, y)
+    }
+    for (let {id, srcBox, srcPlug, destBox, destPlug} of wires) {
+      program.addWire(srcBox, srcPlug, destBox, destPlug)
+    }
+    return program
   }
 }

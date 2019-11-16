@@ -1,9 +1,23 @@
-import {Hold} from './data_flow.js'
-import {Spinner} from './primitive_io.js'
-import {STInitializer, STUpdater, STVisualizer} from './segment_tree.js'
+export var BoxCategories = new Map()
+export var BoxIndex = new Map()
 
-export default [
-  ['data_flow', [Hold]],
-  ['primitive_io', [Spinner]],
-  ['segment_tree', [STInitializer, STUpdater, STVisualizer]]
-]
+import {Hold} from './data_flow.js'
+registerBox(Hold)
+
+import {Spinner} from './primitive_io.js'
+registerBox(Spinner)
+
+import {STInitializer, STUpdater, STVisualizer} from './segment_tree.js'
+registerBox(STInitializer)
+registerBox(STUpdater)
+registerBox(STVisualizer)
+
+function registerBox(box) {
+  let meta = box.metadata()
+  if (!BoxCategories.has(meta.category)) {
+    BoxCategories.set(meta.category, [])
+  }
+  BoxCategories.get(meta.category).push(box)
+
+  BoxIndex.set(box._typeId(), box)
+}

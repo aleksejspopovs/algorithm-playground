@@ -70,4 +70,9 @@ export class APGBox {
     }
     this._deferredProcessing = []
   }
+
+  static _typeId () {
+    let {category, name} = this.metadata()
+    return `${category}.${name}`
+  }
 }
