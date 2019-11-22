@@ -91,8 +91,7 @@ export class APG {
                 .classed('plug input-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-input-${p}`)
                 .text(([_, p]) => p)
-                .on('click', () => {
-                  let [destBox, destPlug] = d3.select(d3.event.srcElement).data()[0]
+                .on('click', ([destBox, destPlug]) => {
                   if (this._pendingWire.srcBox !== undefined) {
                     let {srcBox, srcPlug} = this._pendingWire
                     this._program.addWire(srcBox, srcPlug, destBox, destPlug)
@@ -108,10 +107,9 @@ export class APG {
           node.append('div')
                 .classed('title', true)
                 .text(d => d)
-                .on('click', () => {
+                .on('click', (boxId) => {
                   if (d3.event.altKey) {
                     // delete box
-                    let boxId = d3.select(d3.event.srcElement).data()[0]
                     this._program.deleteBox(boxId)
 
                     this.saveProgram()
@@ -157,8 +155,7 @@ export class APG {
                 .classed('plug output-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-output-${p}`)
                 .text(([_, p]) => p)
-                .on('click', () => {
-                  let [srcBox, srcPlug] = d3.select(d3.event.srcElement).data()[0]
+                .on('click', ([srcBox, srcPlug]) => {
                   if (this._pendingWire.destBox !== undefined) {
                     let {destBox, destPlug} = this._pendingWire
                     this._program.addWire(srcBox, srcPlug, destBox, destPlug)
@@ -215,10 +212,9 @@ export class APG {
           let y2 = locatePlug(d, 'dest', 'y') + 10
           return `M${x1},${y1} C${x1-10},${y1} ${x2-10},${y2} ${x2},${y2}`
         })
-        .on('click', () => {
+        .on('click', (wireId) => {
           if (d3.event.altKey) {
             // delete wire
-            let wireId = d3.select(d3.event.srcElement).data()[0]
             this._program.deleteWire(wireId)
             this.saveProgram()
           }
@@ -243,9 +239,7 @@ export class APG {
       .join('li')
         .classed('toolbox-item', true)
         .text(d => d.metadata().name)
-        .on('click', () => {
-          let box = d3.select(d3.event.srcElement).data()[0]
-
+        .on('click', (box) => {
           d3.select(this._toolboxRoot).classed('visible', false)
           // TODO: make this stick to the pointer until placed, or something
           let boxId = this._program.addBox(new box(), null, d3.event.x - 100, d3.event.y - 100)
