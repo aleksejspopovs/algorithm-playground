@@ -34,8 +34,8 @@ export class APGProgram {
     this._apg = apg
   }
 
-  generateBoxId () {
-    return generateUnusedKey(this._boxes, 'box')
+  generateBoxId (box) {
+    return generateUnusedKey(this._boxes, box.constructor.metadata().name)
   }
 
   generateWireId () {
@@ -43,7 +43,7 @@ export class APGProgram {
   }
 
   addBox (box, id = null, x = 0, y = 0) {
-    id = id || this.generateBoxId()
+    id = id || this.generateBoxId(box)
 
     if (this._boxes.has(id)) {
       throw new Error(`cannot add box with duplicate id ${id}`)
