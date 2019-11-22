@@ -1,0 +1,53 @@
+/* core stylesheet for APG.
+   all classes prefixed with 'A-' */
+
+body {
+	margin: 0px;
+	overflow: hidden;
+}
+
+svg.A-wires {
+	position: absolute;
+	z-index: 1;
+	pointer-events: none;
+}
+
+svg.A-wires path {
+	stroke: black;
+	fill: none;
+	pointer-events: all;
+}
+
+svg.A-wires path:hover {
+	stroke-width: 3px;
+}
+
+.A-box {
+	border: 1px solid black;
+	display: inline-block;
+	position: absolute;
+	background: white;
+}
+
+.A-box .A-title {
+	font-weight: bold;
+}
+
+.A-box .A-plug.A-selected {
+	color: #00af00;
+}
+
+.A-toolbox {
+	border: 1px solid;
+	background: hsl(351, 15%, 90%);
+	position: absolute;
+	z-index: 2;
+	bottom: 5px;
+	right: 5px;
+	padding-right: 10px;
+	display: none;
+}
+
+.A-toolbox.A-visible {
+	display: block;
+}

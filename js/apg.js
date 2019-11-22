@@ -14,16 +14,16 @@ export class APG {
     }
     this._program.attachToUi(this)
 
-    this._wireRoot = d3.select(this._root).append('svg').node()
+    this._wireRoot = d3.select(this._root).append('svg').classed('A-wires', true).node()
 
-    this._toolboxRoot = d3.select(this._root).append('div').classed('toolbox', true).node()
+    this._toolboxRoot = d3.select(this._root).append('div').classed('A-toolbox', true).node()
     d3.select(this._toolboxRoot).append('ul')
 
     d3.select('body')
       .on('keypress', () => {
         if (d3.event.code === 'KeyQ') {
           let toolbox = d3.select(this._toolboxRoot)
-          toolbox.classed('visible', !toolbox.classed('visible'))
+          toolbox.classed('A-visible', !toolbox.classed('A-visible'))
         }
       })
 
@@ -32,7 +32,7 @@ export class APG {
     this._pendingWire = {}
     document.addEventListener('mousedown', (e) => {
       // TODO: this will need fixing when we implement workspace panning
-      if (!d3.select(e.target).classed('plug')) {
+      if (!d3.select(e.target).classed('A-plug')) {
         this._pendingWire = {}
         this.refreshProgram()
       }
@@ -51,7 +51,7 @@ export class APG {
     }
     // TODO: this is quite horrible, and might break if there are more
     // things with class "inner" inside?
-    return root.getElementsByClassName('inner')[0]
+    return root.getElementsByClassName('A-inner')[0]
   }
 
   refreshBox (id) {
@@ -69,7 +69,7 @@ export class APG {
   refreshProgram () {
     // draw boxes
     d3.select(this._root)
-      .selectAll('div.box')
+      .selectAll('div.A-box')
       .data(
         Array.from(this._program._boxes.keys()),
         // this needs to be a regular function because `this`
@@ -79,16 +79,16 @@ export class APG {
       .join(
         enter => {
           let node = enter.append('div')
-          node.classed('box', true)
+          node.classed('A-box', true)
               .attr('id', d => `box-${d}`)
 
           // input plugs
           node.append('ul')
-                .classed('input-plugs-list', true)
+                .classed('A-input-plugs-list', true)
               .selectAll('li')
               .data(d => this._program.getBox(d)._inputOrder.map(p => [d, p]))
               .join('li')
-                .classed('plug input-plug', true)
+                .classed('A-plug A-input-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-input-${p}`)
                 .text(([_, p]) => p)
                 .on('click', ([destBox, destPlug]) => {
@@ -105,7 +105,7 @@ export class APG {
 
           // title
           node.append('div')
-                .classed('title', true)
+                .classed('A-title', true)
                 .text(d => d)
                 .on('click', (boxId) => {
                   if (d3.event.altKey) {
@@ -133,7 +133,7 @@ export class APG {
           // the APG object.
           let self = this
           node.append('div')
-                .classed('inner', true)
+                .classed('A-inner', true)
               .select(function (d) {
                 // conditionally initialize the layout, if the box wants that.
                 // we have to use this .select trick instead of just calling
@@ -148,11 +148,11 @@ export class APG {
 
           // output plugs
           node.append('ul')
-                .classed('output-plugs-list', true)
+                .classed('A-output-plugs-list', true)
               .selectAll('li')
               .data(d => this._program.getBox(d)._outputOrder.map(p => [d, p]))
               .join('li')
-                .classed('plug output-plug', true)
+                .classed('A-plug A-output-plug', true)
                 .attr('id', ([d, p]) => `plug-${d}-output-${p}`)
                 .text(([_, p]) => p)
                 .on('click', ([srcBox, srcPlug]) => {
@@ -175,15 +175,15 @@ export class APG {
 
     // highlight the endpoint of the current pending wire (if any)
     d3.select(this._root)
-      .selectAll('li.output-plug')
-      .classed('selected',
+      .selectAll('li.A-output-plug')
+      .classed('A-selected',
         ([d, p]) =>
           (d === this._pendingWire.srcBox) && (p === this._pendingWire.srcPlug)
       )
 
     d3.select(this._root)
-      .selectAll('li.input-plug')
-      .classed('selected',
+      .selectAll('li.A-input-plug')
+      .classed('A-selected',
         ([d, p]) =>
           (d === this._pendingWire.destBox) && (p === this._pendingWire.destPlug)
       )
@@ -224,23 +224,23 @@ export class APG {
   refreshToolbox () {
     d3.select(this._toolboxRoot)
       .select('ul')
-      .selectAll('li.toolbox-group')
+      .selectAll('li.A-toolbox-group')
       .data(Array.from(BoxCategories.entries()))
       .join(enter => {
         let node = enter.append('li')
-        node.classed('toolbox-group', true)
+        node.classed('A-toolbox-group', true)
             .text(([group, _]) => group)
         node.append('ul')
         return node
       })
       .select('ul')
-      .selectAll('li.toolbox-item')
+      .selectAll('li.A-toolbox-item')
       .data(([_, items]) => items)
       .join('li')
-        .classed('toolbox-item', true)
+        .classed('A-toolbox-item', true)
         .text(d => d.metadata().name)
         .on('click', (box) => {
-          d3.select(this._toolboxRoot).classed('visible', false)
+          d3.select(this._toolboxRoot).classed('A-visible', false)
           // TODO: make this stick to the pointer until placed, or something
           let boxId = this._program.addBox(new box(), null, d3.event.x - 100, d3.event.y - 100)
 
