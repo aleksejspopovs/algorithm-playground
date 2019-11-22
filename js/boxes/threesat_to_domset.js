@@ -29,9 +29,6 @@ export class ThreeSatToDomSet extends APGBox {
     let graph = new Graph()
     let dimensions = this._dimensions(formula)
 
-    let cX = 500
-    let cY = 500
-
     let n = formula.variables.length
     for (let [i, variable] of formula.variables.entries()) {
       let variable = formula.variables[i]
@@ -39,8 +36,8 @@ export class ThreeSatToDomSet extends APGBox {
 
       this._placeVariableGadget(
         graph.offset(
-          cX + dimensions.varRingR * cos(alpha),
-          cY + dimensions.varRingR * sin(alpha),
+          dimensions.varRingR * cos(alpha),
+          dimensions.varRingR * sin(alpha),
           dimensions.varScale,
           `var_${variable}_`,
           dimensions.rotateVariables ? alpha : 0
@@ -53,8 +50,8 @@ export class ThreeSatToDomSet extends APGBox {
     for (let [i, clause] of formula.clauses.entries()) {
       graph.addNode(
         `clause_${i}`,
-        cX + dimensions.clauseRingR * cos(2 * PI * i / m),
-        cY + dimensions.clauseRingR * sin(2 * PI * i / m)
+        dimensions.clauseRingR * cos(2 * PI * i / m),
+        dimensions.clauseRingR * sin(2 * PI * i / m)
       )
       for (let literal of clause) {
         let val = literal.valency ? 't' : 'f'
