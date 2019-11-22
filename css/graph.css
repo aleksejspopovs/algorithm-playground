@@ -1,0 +1,19 @@
+/* css for the Graph box.
+   all classes prefixed with 'Graph-' */
+
+svg.Graph-svg .Graph-node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+    fill: #000;
+}
+
+svg.Graph-svg .Graph-edge {
+    stroke: #aaa;
+    stroke-opacity: .6;
+    stroke-width: 3px;
+}
+
+svg.Graph-svg .Graph-edge:hover {
+    stroke-opacity: 1;
+    stroke-width: 4px;
+}

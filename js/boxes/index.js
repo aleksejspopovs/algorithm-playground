@@ -12,6 +12,16 @@ import {STInitializer, STUpdater} from './segment_tree.js'
 registerBox(STInitializer)
 registerBox(STUpdater)
 
+import {Graph, ExampleGraph} from './graph.js'
+registerBox(Graph)
+registerBox(ExampleGraph)
+
+import {Formula} from './formula.js'
+registerBox(Formula)
+
+import {ThreeSatToDomSet} from './threesat_to_domset.js'
+registerBox(ThreeSatToDomSet)
+
 function registerBox(box) {
   let meta = box.metadata()
   if (!BoxCategories.has(meta.category)) {

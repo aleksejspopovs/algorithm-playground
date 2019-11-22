@@ -8,6 +8,18 @@ export function generateUnusedKey(map, prefix) {
   }
 }
 
+function iteratorsEqual(left, right) {
+  while (true) {
+    let leftValue = left.next()
+    let rightValue = right.next()
+    if (leftValue.done) {
+      return rightValue.done
+    } else if (!objectsEqual(leftValue.value, rightValue.value)) {
+      return false
+    }
+  }
+}
+
 export function objectsEqual(left, right) {
   // TODO: does this work for String, Boolean, Number objects?
   // TODO: fast path for when (left === right)? not sure if that ever comes up
@@ -36,6 +48,8 @@ export function objectsEqual(left, right) {
         && (left.constructor === right.constructor)
         && left.equals(right)
       )
+    } else if (left instanceof Map) {
+      return (right instanceof Map) && iteratorsEqual(left.entries(), right.entries())
     } else {
       throw new Error(`tried to compare incomparable objects ${left} and ${right}`)
     }
@@ -60,6 +74,12 @@ export function objectClone(obj) {
       throw new Error('not implemented')
     } else if (obj instanceof APGData) {
       return obj.clone()
+    } else if (obj instanceof Map) {
+      // oops at the intermediate conversion to Array (TODO?)
+      return new Map(Array.from(
+        obj.entries(),
+        ([key, value]) => [objectClone(key), objectClone(value)]
+      ))
     } else {
       throw new Error(`tried to clone uncloneable object ${obj}`)
     }
@@ -82,6 +102,11 @@ export function objectFreeze(obj) {
       return Object.freeze(obj)
     } else if (obj instanceof APGData) {
       return obj.clone()
+    } else if (obj instanceof Map) {
+      obj.forEach((value, key) => {
+        objectFreeze(value)
+        objectFreeze(key)
+      })
     } else {
       throw new Error(`tried to freeze unfreezeable object ${obj}`)
     }
