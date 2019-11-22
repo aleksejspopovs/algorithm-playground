@@ -67,7 +67,7 @@ export class Graph extends APGData {
       && (this._nodeJustAdded === other._nodeJustAdded)
       && objectsEqual(this._nodes, other._nodes)
       && objectsEqual(this._edges, other._edges)
-      && objectsEqual(this._edgesFrom, other._edges)
+      && objectsEqual(this._edgesFrom, other._edgesFrom)
     )
   }
 
