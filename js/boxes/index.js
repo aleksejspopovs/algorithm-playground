@@ -4,13 +4,13 @@ export var BoxIndex = new Map()
 import {Hold} from './data_flow.js'
 registerBox(Hold)
 
-import {Spinner} from './primitive_io.js'
+import {Spinner, ToString} from './primitive_io.js'
 registerBox(Spinner)
+registerBox(ToString)
 
-import {STInitializer, STUpdater, STVisualizer} from './segment_tree.js'
+import {STInitializer, STUpdater} from './segment_tree.js'
 registerBox(STInitializer)
 registerBox(STUpdater)
-registerBox(STVisualizer)
 
 function registerBox(box) {
   let meta = box.metadata()

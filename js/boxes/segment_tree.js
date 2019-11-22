@@ -1,23 +1,6 @@
 import {APGBox} from '../box.js'
 import {SegmentTree} from '../data_structures/segment_tree.js'
 
-export class STVisualizer extends APGBox {
-  constructor () {
-    super()
-    this.newInputPlug('tree')
-  }
-
-  static metadata () {
-    return {category: 'segment_tree', name: 'visualizer'}
-  }
-
-  render (node) {
-    let tree = this.input.tree.read()
-    let output = (tree !== null) ? tree.toString() : 'no tree'
-    node.innerHTML = `<pre>${output}</pre>` // warning: don't do this at home
-  }
-}
-
 export class STUpdater extends APGBox {
   constructor () {
     super()

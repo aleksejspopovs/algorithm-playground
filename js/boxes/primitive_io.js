@@ -29,3 +29,24 @@ export class Spinner extends APGBox {
     node.getElementsByTagName('input')[0].value = this.state.value
   }
 }
+
+export class ToString extends APGBox {
+  constructor () {
+    super()
+    this.newInputPlug('value')
+  }
+
+  static metadata () {
+    return {category: 'primitive_io', name: 'to_string'}
+  }
+
+  createLayout () {
+    return document.createElement('pre')
+  }
+
+  render (node) {
+    let value = this.input.value.read()
+    let output = new String(value)
+    node.children[0].innerText = output
+  }
+}
