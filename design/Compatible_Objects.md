@@ -8,6 +8,7 @@ The following objects are APG-compatible:
 - booleans, numbers, and strings
 - arrays containing only APG-compatible objects as elements
 - plain objects (ones that are not instantiations of classes, like `{hello: 'world'}`) containing only APG-compatible objects as values
+- `Map` objects containing only APG-compatible objects as keys and values
 - instantiations of classes that subclass `APGData`, which requires them to implement the following member methods:
 	- `equals(other)` returns a boolean which is true if `other` is equal to `this`. `other` is guaranteed to be an instance of the same class (not of a subclass). What exactly equality means will depend on the particular data structure/object you are implementing, but generally objects should be equal if carrying out the same computation on them always produces equal outputs.
 	- `clone()` returns another object which is equal (in the above sense) to `this`, but such that no modifications to `this` would affect it, and vice-versa.
