@@ -37,6 +37,20 @@ svg.A-wires path:hover {
 	color: #00af00;
 }
 
+.A-box ul.A-input-plugs-list {
+    margin-top: 0px;
+    padding-top: 5px;
+    background: #fff4e8;
+    padding-bottom: 5px;
+}
+
+.A-box ul.A-output-plugs-list {
+    margin-bottom: 0px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background: #e8fff6;
+}
+
 .A-toolbox {
 	border: 1px solid;
 	background: hsl(351, 15%, 90%);
