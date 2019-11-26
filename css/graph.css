@@ -1,10 +1,14 @@
 /* css for the Graph box.
    all classes prefixed with 'Graph-' */
 
-svg.Graph-svg .Graph-node {
+svg.Graph-svg .Graph-node,.Graph-ghost-node {
     stroke: #fff;
     stroke-width: 1.5px;
     fill: #000;
+}
+
+svg.Graph-svg .Graph-moving {
+    fill: #bbb;
 }
 
 svg.Graph-svg .Graph-edge {

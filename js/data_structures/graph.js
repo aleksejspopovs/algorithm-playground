@@ -96,8 +96,25 @@ export class Graph extends APGData {
 
     let node = new Node(name, x, y)
     this._nodes.set(name, node)
-    this._edgesFrom.set(name, [])
+    this._edgesFrom.set(name, new Set())
     this._nodeJustAdded = name
+
+    return this
+  }
+
+  deleteNode (name) {
+    if (!this._nodes.has(name)) {
+      throw new Error(`node ${name} does not exist`)
+    }
+
+    if (this._nodeJustAdded === name) {
+      this._nodeJustAdded = null
+    }
+
+    this.edgesFrom(name).forEach((e) => this.deleteEdge(e))
+
+    this._edgesFrom.delete(name)
+    this._nodes.delete(name)
 
     return this
   }
@@ -113,6 +130,8 @@ export class Graph extends APGData {
   moveNode (name, newX, newY) {
     this._nodes.get(name).x = newX
     this._nodes.get(name).y = newY
+
+    return this
   }
 
   addEdge (name, from, to) {
@@ -127,10 +146,26 @@ export class Graph extends APGData {
 
     let edge = new Edge(name, from, to)
     this._edges.set(name, edge)
-    this._edgesFrom.get(from).push(name)
+    this._edgesFrom.get(from).add(name)
     if (!this.directed) {
-      this._edgesFrom.get(to).push(name)
+      this._edgesFrom.get(to).add(name)
     }
+
+    return this
+  }
+
+  deleteEdge (name) {
+    if (!this._edges.has(name)) {
+      throw new Error(`edge ${name} does not exist`)
+    }
+
+    let edge = this._edges.get(name)
+    this._edgesFrom.get(edge.from).delete(name)
+    if (!this.directed) {
+      this._edgesFrom.get(edge.to).delete(name)
+    }
+
+    this._edges.delete(name)
 
     return this
   }
@@ -154,9 +189,11 @@ export class Graph extends APGData {
   }
 
   flattenEdge (name) {
+    let edge = this._edges.get(name)
     return {
-      from: this._nodes.get(this._edges.get(name).from),
-      to: this._nodes.get(this._edges.get(name).to)
+      name: name,
+      from: this._nodes.get(edge.from),
+      to: this._nodes.get(edge.to)
     }
   }
 
