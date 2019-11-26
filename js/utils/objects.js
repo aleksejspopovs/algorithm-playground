@@ -37,7 +37,7 @@ export function objectsEqual(left, right) {
       return (
         Array.isArray(right)
         && (left.length == right.length)
-        && (left.map((l, i) => objectsEqual(l, right[i])))
+        && (left.every((l, i) => objectsEqual(l, right[i])))
       )
     } else if (left.constructor === Object) {
       // this is an object that is not an instance of anything interesting
