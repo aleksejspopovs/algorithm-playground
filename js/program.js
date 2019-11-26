@@ -217,15 +217,11 @@ export class APGProgram {
     }
 
     this._workHappening = true
-    console.log('starting processing loop')
     while (!this._workQueue.empty()) {
       let pendingOp = this._workQueue.pop()
-      console.log(`executing ${pendingOp}`)
       pendingOp()
     }
     this._workHappening = false
-
-    console.log('done with the processing loop')
   }
 
   save () {
