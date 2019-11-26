@@ -164,12 +164,15 @@ export class APGProgram {
       }
       this._boxes.get(boxId).object._isProcessing = true
       this._apg && this._apg.startBoxProcessing(boxId)
+      var error = null
       try {
         f()
+      } catch (e) {
+        error = e
       } finally {
         this._boxes.get(boxId).object._isProcessing = false
         this.scheduleBoxRefresh(boxId)
-        this._apg && this._apg.finishBoxProcessing(boxId)
+        this._apg && this._apg.finishBoxProcessing(boxId, error)
       }
     })
     this.performWork()
@@ -216,18 +219,9 @@ export class APGProgram {
     this._workHappening = true
     console.log('starting processing loop')
     while (!this._workQueue.empty()) {
-      // TODO: handle exceptions
       let pendingOp = this._workQueue.pop()
       console.log(`executing ${pendingOp}`)
-      try {
-        pendingOp()
-      } catch (e) {
-        console.error(`some error happened in work loop: ${e}`)
-        // TODO: recover somehow, but make sure
-        // that _workHappening is still reset eventually.
-        // we probably want to mark the involved box as
-        // being in some sort of a broken state.
-      }
+      pendingOp()
     }
     this._workHappening = false
 

@@ -110,27 +110,32 @@ export class APG {
                 .on('click', ([d, p]) => clickOnPlug('dest', d, p))
 
           // title
-          node.append('div')
-                .classed('A-title', true)
-                .text(d => d)
-                .on('click', (boxId) => {
-                  if (d3.event.altKey) {
-                    // delete box
-                    this._program.deleteBox(boxId)
+          let titleContainer = node.append('div')
+          titleContainer.append('span')
+              .classed('A-title', true)
+              .text(d => d)
+              .on('click', (boxId) => {
+                if (d3.event.altKey) {
+                  // delete box
+                  this._program.deleteBox(boxId)
 
-                    this.saveProgram()
-                  }
+                  this.saveProgram()
+                }
+              })
+              .call(d3.drag()
+                .on('drag', () => {
+                  let box = d3.event.subject
+                  let {movementX, movementY} = d3.event.sourceEvent
+                  this._program._boxes.get(box).x += movementX
+                  this._program._boxes.get(box).y += movementY
+                  this.refreshProgram()
                 })
-                .call(d3.drag()
-                  .on('drag', () => {
-                    let box = d3.event.subject
-                    let {movementX, movementY} = d3.event.sourceEvent
-                    this._program._boxes.get(box).x += movementX
-                    this._program._boxes.get(box).y += movementY
-                    this.refreshProgram()
-                  })
-                  .on('end', () => {this.saveProgram()})
-                )
+                .on('end', () => {this.saveProgram()})
+              )
+          // error display
+          titleContainer.append('span')
+              .classed('A-error', true)
+              .text('⚠️')
 
           // render area
           // because of javascript scope/`this` shenanigans, we need to use an
@@ -253,14 +258,19 @@ export class APG {
         .style('opacity', 0.25)
   }
 
-  finishBoxProcessing (id) {
-    d3.select(this._root)
-      .select(`#A-box-${id}`)
-      .select('.A-veil')
+  finishBoxProcessing (id, error) {
+    let box = d3.select(this._root).select(`#A-box-${id}`)
+
+    box.select('.A-error')
+        .classed('A-visible', error !== null)
+        .attr('title', error)
+
+    box.select('.A-veil')
       .transition()
         .duration(250)
         .style('pointer-events', 'none')
         .style('opacity', 0)
+
   }
 
   flashWireActivity (id) {

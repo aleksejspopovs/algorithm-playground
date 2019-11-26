@@ -45,6 +45,10 @@ svg.A-wires path:hover {
 	font-weight: bold;
 }
 
+.A-box .A-error {
+	display: none;
+}
+
 .A-box .A-plug.A-selected {
 	color: #00af00;
 }
@@ -74,6 +78,6 @@ svg.A-wires path:hover {
 	display: none;
 }
 
-.A-toolbox.A-visible {
-	display: block;
+.A-visible {
+	display: block !important;
 }
