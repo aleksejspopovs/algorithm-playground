@@ -50,6 +50,8 @@ export function objectsEqual(left, right) {
       )
     } else if (left instanceof Map) {
       return (right instanceof Map) && iteratorsEqual(left.entries(), right.entries())
+    } else if (left instanceof Set) {
+      return (right instanceof Set) && iteratorsEqual(left.values(), right.values())
     } else {
       throw new Error(`tried to compare incomparable objects ${left} and ${right}`)
     }
@@ -80,6 +82,9 @@ export function objectClone(obj) {
         obj.entries(),
         ([key, value]) => [objectClone(key), objectClone(value)]
       ))
+    } else if (obj instanceof Set) {
+      // oops at the intermediate conversion to Array (TODO?)
+      return new Set(Array.from(obj.values(), objectClone))
     } else {
       throw new Error(`tried to clone uncloneable object ${obj}`)
     }
@@ -107,6 +112,12 @@ export function objectFreeze(obj) {
         objectFreeze(value)
         objectFreeze(key)
       })
+      // TODO: Maps themselves cannot be frozen. that's bad.
+      return obj
+    } else if (obj instanceof Set) {
+      obj.forEach(objectFreeze)
+      // TODO: Sets themselves cannot be frozen. that's bad.
+      return obj
     } else {
       throw new Error(`tried to freeze unfreezeable object ${obj}`)
     }
