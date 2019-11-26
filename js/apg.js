@@ -65,6 +65,20 @@ export class APG {
   }
 
   refreshProgram () {
+    // helper for plug onclick handlers
+    let clickOnPlug = (side, box, plug) => {
+      this._pendingWire[side + 'Box'] = box
+      this._pendingWire[side + 'Plug'] = plug
+      let otherSide = (side === 'src') ? 'dest' : 'src'
+      if (this._pendingWire[otherSide + 'Box'] !== undefined) {
+        let {srcBox, srcPlug, destBox, destPlug} = this._pendingWire
+        this._program.addWire(srcBox, srcPlug, destBox, destPlug)
+        this.saveProgram()
+        this._pendingWire = {}
+      }
+      this.refreshProgram()
+    }
+
     // draw boxes
     d3.select(this._root)
       .selectAll('div.A-box')
@@ -93,17 +107,7 @@ export class APG {
                 .classed('A-plug A-input-plug', true)
                 .attr('id', ([d, p]) => `A-plug-${d}-input-${p}`)
                 .text(([_, p]) => p)
-                .on('click', ([destBox, destPlug]) => {
-                  if (this._pendingWire.srcBox !== undefined) {
-                    let {srcBox, srcPlug} = this._pendingWire
-                    this._program.addWire(srcBox, srcPlug, destBox, destPlug)
-                    this.saveProgram()
-                    this._pendingWire = {}
-                  } else {
-                    this._pendingWire = {destBox, destPlug}
-                  }
-                  this.refreshProgram()
-                })
+                .on('click', ([d, p]) => clickOnPlug('dest', d, p))
 
           // title
           node.append('div')
@@ -157,17 +161,7 @@ export class APG {
                 .classed('A-plug A-output-plug', true)
                 .attr('id', ([d, p]) => `A-plug-${d}-output-${p}`)
                 .text(([_, p]) => p)
-                .on('click', ([srcBox, srcPlug]) => {
-                  if (this._pendingWire.destBox !== undefined) {
-                    let {destBox, destPlug} = this._pendingWire
-                    this._program.addWire(srcBox, srcPlug, destBox, destPlug)
-                    this.saveProgram()
-                    this._pendingWire = {}
-                  } else {
-                    this._pendingWire = {srcBox, srcPlug}
-                  }
-                  this.refreshProgram()
-                })
+                .on('click', ([d, p]) => clickOnPlug('src', d, p))
 
           return node
         }
