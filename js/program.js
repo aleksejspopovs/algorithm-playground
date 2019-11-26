@@ -163,11 +163,13 @@ export class APGProgram {
         throw new Error('trying to enter processing mode on box already in it')
       }
       this._boxes.get(boxId).object._isProcessing = true
+      this._apg && this._apg.startBoxProcessing(boxId)
       try {
         f()
       } finally {
         this._boxes.get(boxId).object._isProcessing = false
         this.scheduleBoxRefresh(boxId)
+        this._apg && this._apg.finishBoxProcessing(boxId)
       }
     })
     this.performWork()
@@ -202,6 +204,7 @@ export class APGProgram {
     for (let [_, wire] of this._wiresByPlug[plugFullName].entries()) {
       let {destBox, destPlug} = this._wires.get(wire)
       this.schedulePlugUpdate(destBox, destPlug, value)
+      this._apg && this._apg.flashWireActivity(wire)
     }
   }
 

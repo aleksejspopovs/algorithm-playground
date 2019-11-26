@@ -44,13 +44,11 @@ export class APG {
   }
 
   getNodeForBox (id) {
-    let root = document.getElementById(`box-${id}`)
+    let root = document.getElementById(`A-box-${id}`)
     if (!root) {
       // node not created yet, so let's just not render
       return null
     }
-    // TODO: this is quite horrible, and might break if there are more
-    // things with class "inner" inside?
     return root.getElementsByClassName('A-inner')[0]
   }
 
@@ -74,13 +72,17 @@ export class APG {
         Array.from(this._program._boxes.keys()),
         // this needs to be a regular function because `this`
         // works differently for lambdas
-        function (d) { return d ? d : `box-${this.id}` }
+        function (d) { return d ? d : `A-box-${this.id}` }
       )
       .join(
         enter => {
           let node = enter.append('div')
           node.classed('A-box', true)
-              .attr('id', d => `box-${d}`)
+              .attr('id', d => `A-box-${d}`)
+
+          // veil (covers the box completely, used to indicate when the
+          // box is busy)
+          node.append('div').classed('A-veil', true)
 
           // input plugs
           node.append('ul')
@@ -89,7 +91,7 @@ export class APG {
               .data(d => this._program.getBox(d)._inputOrder.map(p => [d, p]))
               .join('li')
                 .classed('A-plug A-input-plug', true)
-                .attr('id', ([d, p]) => `plug-${d}-input-${p}`)
+                .attr('id', ([d, p]) => `A-plug-${d}-input-${p}`)
                 .text(([_, p]) => p)
                 .on('click', ([destBox, destPlug]) => {
                   if (this._pendingWire.srcBox !== undefined) {
@@ -153,7 +155,7 @@ export class APG {
               .data(d => this._program.getBox(d)._outputOrder.map(p => [d, p]))
               .join('li')
                 .classed('A-plug A-output-plug', true)
-                .attr('id', ([d, p]) => `plug-${d}-output-${p}`)
+                .attr('id', ([d, p]) => `A-plug-${d}-output-${p}`)
                 .text(([_, p]) => p)
                 .on('click', ([srcBox, srcPlug]) => {
                   if (this._pendingWire.destBox !== undefined) {
@@ -194,7 +196,7 @@ export class APG {
       let boxName = wire[`${end}Box`]
       let plugName = wire[`${end}Plug`]
       let io = (end === 'src') ? 'output' : 'input'
-      let element = document.getElementById(`plug-${boxName}-${io}-${plugName}`)
+      let element = document.getElementById(`A-plug-${boxName}-${io}-${plugName}`)
       return element.getBoundingClientRect()[coord]
     }
 
@@ -205,6 +207,7 @@ export class APG {
       .selectAll('path')
       .data(Array.from(this._program._wires.keys()))
       .join('path')
+        .attr('id', d => `A-wire-${d}`)
         .attr('d', (d) => {
           let x1 = locatePlug(d, 'src', 'x') - 14
           let y1 = locatePlug(d, 'src', 'y') + 10
@@ -246,6 +249,34 @@ export class APG {
 
           this.saveProgram()
         })
+  }
+
+  startBoxProcessing (id) {
+    d3.select(this._root)
+      .select(`#A-box-${id}`)
+      .select('.A-veil')
+        .style('pointer-events', 'all')
+        .style('opacity', 0.25)
+  }
+
+  finishBoxProcessing (id) {
+    d3.select(this._root)
+      .select(`#A-box-${id}`)
+      .select('.A-veil')
+      .transition()
+        .duration(250)
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
+  }
+
+  flashWireActivity (id) {
+    let wire = d3.select(this._wireRoot).select(`#A-wire-${id}`)
+    let initialOffset = wire.style('stroke-dashoffset')
+    // convert from 123px to 123
+    initialOffset = parseInt(initialOffset.slice(0, -2)) || 0
+    wire.transition()
+        .duration(250)
+        .style('stroke-dashoffset', `${initialOffset - 20}px`)
   }
 
   saveProgram () {
