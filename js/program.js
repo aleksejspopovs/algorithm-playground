@@ -168,6 +168,7 @@ export class APGProgram {
       try {
         f()
       } catch (e) {
+        console.error('caught error', e)
         error = e
       } finally {
         this._boxes.get(boxId).object._isProcessing = false
