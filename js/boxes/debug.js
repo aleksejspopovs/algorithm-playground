@@ -25,13 +25,13 @@ export class SlowComputation extends APGBox {
 
     let output = 1
     for (let i = 1; i <= n; i++) {
-      output = (output * 1234567 + 7654321) % 33554393
+      output = (output * 123456 + 789012) % 1500007
 
       if ((i & 1023) === 0) {
         await yieldControl()
       }
     }
 
-    this.output.output.write(`${n}: ${output}`)
+    this.output.output.write(output)
   }
 }
