@@ -223,7 +223,22 @@ export class APGProgram {
       return
     }
 
-    let yieldControl = () => new Promise(resolve => setTimeout(resolve, 0))
+    let yieldControl = () => {
+      // when a box yields control, we try to do a quick UI job.
+      // for this to work well, UI jobs *must* actually be quick.
+      if (this._workQueue.hasPrioritizedJobs()) {
+        let job = this._workQueue.pop()
+        try {
+          job(() => null)
+        } catch (e) {
+          console.error('uncaught error in work queue', e)
+        }
+      }
+      // regardless of what happens, we also set a zero-duration
+      // timeout, which lets the browser do repaints and stuff
+      // and keeps the UI responsive.
+      return new Promise(resolve => setTimeout(resolve, 0))
+    }
 
     this._workHappening = true
     while (!this._workQueue.empty()) {

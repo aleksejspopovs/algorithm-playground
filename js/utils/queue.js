@@ -58,4 +58,8 @@ export class TwoPriorityQueue {
   empty () {
     return this._queues.every((q) => q.empty())
   }
+
+  hasPrioritizedJobs () {
+    return !this._queues[0].empty()
+  }
 }
