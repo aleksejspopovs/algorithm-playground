@@ -129,13 +129,13 @@ export class APGProgram {
     let destPlugFullName = qualifiedPlugName(destBox, 'in', destPlug)
     this._wiresByPlug[destPlugFullName].add(id)
 
+    this.scheduleProgramRefresh()
+
     // update dest value if src value not null
     let srcPlugObj = this._boxes.get(srcBox).object.output[srcPlug]
     if (srcPlugObj._value !== null) {
       this.schedulePlugUpdate(destBox, destPlug, srcPlugObj._value)
     }
-
-    this.scheduleProgramRefresh()
 
     return id
   }
