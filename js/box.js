@@ -48,7 +48,10 @@ export class APGBox {
     if (this._program === null) {
       this._deferredProcessing.push(callback)
     } else {
-      this._program.scheduleProcessing(this._id, callback)
+      this._program.scheduleProcessing(this._id,
+        // make sure that the `this` reference is set correctly
+        (yieldExecution) => callback.call(this, yieldExecution)
+      )
     }
   }
 

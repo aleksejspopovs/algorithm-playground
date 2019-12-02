@@ -158,15 +158,21 @@ export class APGProgram {
   }
 
   scheduleProcessing (boxId, f) {
-    this._workQueue.pushRegular(() => {
+    this._workQueue.pushRegular(async yieldControl => {
       if (this._boxes.get(boxId).object._isProcessing) {
         throw new Error('trying to enter processing mode on box already in it')
       }
       this._boxes.get(boxId).object._isProcessing = true
       this._apg && this._apg.startBoxProcessing(boxId)
+
       var error = null
       try {
-        f()
+        // processing functions might return a Promise. if so, we
+        // consider processing to last until that function returns.
+        // it is okay to await on non-Promise values: in that case
+        // the await completes immediately. so processing functions
+        // can also be simple synchronous functions.
+        await f(yieldControl)
       } catch (e) {
         console.error('caught error', e)
         error = e
@@ -198,7 +204,7 @@ export class APGProgram {
   schedulePlugUpdate (boxId, plugName, value) {
     this.scheduleProcessing(
       boxId,
-      () => this._boxes.get(boxId).object.input[plugName]._write(value)
+      (yieldControl) => this._boxes.get(boxId).object.input[plugName]._write(value, yieldControl)
     )
   }
 
@@ -212,16 +218,31 @@ export class APGProgram {
     }
   }
 
-  performWork () {
+  async performWork () {
     if (this._workHappening) {
       return
     }
 
-    this._workHappening = true
-    while (!this._workQueue.empty()) {
-      let pendingOp = this._workQueue.pop()
-      pendingOp()
+    let yieldControl = () => new Promise(resolve => setTimeout(resolve, 0))
+
+    let doOneJobAndContinue = async () => {
+      if (this._workQueue.empty()) {
+        return
+      }
+
+      let job = this._workQueue.pop()
+
+      try {
+        await job(yieldControl)
+      } catch (e) {
+        console.error('uncaught error in work queue', e)
+      }
+
+      await doOneJobAndContinue()
     }
+
+    this._workHappening = true
+    await doOneJobAndContinue()
     this._workHappening = false
   }
 

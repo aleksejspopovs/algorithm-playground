@@ -8,7 +8,7 @@ export class APGInputPlug {
     this._box = box
   }
 
-  _write (value) {
+  _write (value, yieldControl) {
     // internal method.
     // assumes that value comes in frozen, copied.
     if (!this._box._isProcessing) {
@@ -17,7 +17,7 @@ export class APGInputPlug {
 
     this._value = value
     if (this.updateHandler) {
-      this.updateHandler.call(this._box)
+      return this.updateHandler.call(this._box, yieldControl)
     }
   }
 

@@ -254,6 +254,7 @@ export class APG {
     d3.select(this._root)
       .select(`#A-box-${id}`)
       .select('.A-veil')
+        .interrupt('finish-processing')
         .style('pointer-events', 'all')
         .style('opacity', 0.25)
   }
@@ -266,7 +267,7 @@ export class APG {
         .attr('title', error)
 
     box.select('.A-veil')
-      .transition()
+      .transition('finish-processing')
         .duration(250)
         .style('pointer-events', 'none')
         .style('opacity', 0)

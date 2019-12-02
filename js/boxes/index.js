@@ -22,6 +22,9 @@ registerBox(Formula)
 import {ThreeSatToDomSet} from './threesat_to_domset.js'
 registerBox(ThreeSatToDomSet)
 
+import {SlowComputation} from './debug.js'
+registerBox(SlowComputation)
+
 function registerBox(box) {
   let meta = box.metadata()
   if (!BoxCategories.has(meta.category)) {
