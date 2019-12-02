@@ -225,11 +225,8 @@ export class APGProgram {
 
     let yieldControl = () => new Promise(resolve => setTimeout(resolve, 0))
 
-    let doOneJobAndContinue = async () => {
-      if (this._workQueue.empty()) {
-        return
-      }
-
+    this._workHappening = true
+    while (!this._workQueue.empty()) {
       let job = this._workQueue.pop()
 
       try {
@@ -237,12 +234,7 @@ export class APGProgram {
       } catch (e) {
         console.error('uncaught error in work queue', e)
       }
-
-      await doOneJobAndContinue()
     }
-
-    this._workHappening = true
-    await doOneJobAndContinue()
     this._workHappening = false
   }
 
