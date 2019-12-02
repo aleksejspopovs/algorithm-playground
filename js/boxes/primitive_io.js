@@ -33,7 +33,12 @@ export class Spinner extends APGBox {
 export class ToString extends APGBox {
   constructor () {
     super()
-    this.newInputPlug('value')
+    this.newInputPlug('value', this.updateValue)
+    this.state = {value: null}
+  }
+
+  updateValue () {
+    this.state.value = this.input.value.read()
   }
 
   static metadata () {
@@ -45,8 +50,7 @@ export class ToString extends APGBox {
   }
 
   render (node) {
-    let value = this.input.value.read()
-    let output = new String(value)
+    let output = new String(this.state.value)
     node.children[0].innerText = output
   }
 }

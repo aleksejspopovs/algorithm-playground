@@ -11,7 +11,10 @@ export class APGInputPlug {
   _write (value) {
     // internal method.
     // assumes that value comes in frozen, copied.
-    // assumes that box is currently in processing mode.
+    if (!this._box._isProcessing) {
+      throw new Error('cannot update input plugs when box is not in processing mode')
+    }
+
     this._value = value
     if (this.updateHandler) {
       this.updateHandler.call(this._box)
@@ -19,10 +22,18 @@ export class APGInputPlug {
   }
 
   read () {
+    if (!this._box._isProcessing) {
+      throw new Error('cannot read input plugs when box is not in processing mode')
+    }
+
     return this._value
   }
 
   copy () {
+    if (!this._box._isProcessing) {
+      throw new Error('cannot read input plugs when box is not in processing mode')
+    }
+
     return objectClone(this._value)
   }
 }
