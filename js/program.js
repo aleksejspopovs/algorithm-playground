@@ -174,7 +174,7 @@ export class APGProgram {
         // can also be simple synchronous functions.
         await f(yieldControl)
       } catch (e) {
-        console.error('caught error', e)
+        console.error('caught error while processing box', boxId, e)
         error = e
       } finally {
         this._boxes.get(boxId).object._isProcessing = false
