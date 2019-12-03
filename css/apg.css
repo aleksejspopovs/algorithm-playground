@@ -6,6 +6,12 @@ body {
 	overflow: hidden;
 }
 
+div.A-program {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
 svg.A-wires {
 	position: absolute;
 	z-index: 1;
@@ -28,6 +34,7 @@ svg.A-wires path:hover {
 	display: inline-block;
 	position: absolute;
 	background: white;
+	transform-origin: top left;
 }
 
 .A-box .A-veil {

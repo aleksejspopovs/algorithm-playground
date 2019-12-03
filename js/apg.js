@@ -4,7 +4,7 @@ import {BoxCategories} from './boxes/index.js'
 
 export class APG {
   constructor (root) {
-    this._root = root
+    this._root = d3.select(root).append('div').classed('A-program', true).node()
 
     let savedProgram = window.localStorage.program
     if (savedProgram === undefined) {
@@ -14,9 +14,9 @@ export class APG {
     }
     this._program.attachToUi(this)
 
-    this._wireRoot = d3.select(this._root).append('svg').classed('A-wires', true).node()
+    this._wireRoot = d3.select(root).append('svg').classed('A-wires', true).node()
 
-    this._toolboxRoot = d3.select(this._root).append('div').classed('A-toolbox', true).node()
+    this._toolboxRoot = d3.select(root).append('div').classed('A-toolbox', true).node()
     d3.select(this._toolboxRoot).append('ul')
 
     d3.select('body')
@@ -26,6 +26,8 @@ export class APG {
           toolbox.classed('A-visible', !toolbox.classed('A-visible'))
         }
       })
+
+    d3.select(this._root).call(d3.zoom().on('zoom', () => this.refreshProgram()))
 
     // when non-empty, this is an object with either two properties
     // (srcBox, srcPlug) or two properties (destBox, destPlug)
@@ -80,6 +82,7 @@ export class APG {
     }
 
     // draw boxes
+    let zoom = d3.zoomTransform(this._root)
     d3.select(this._root)
       .selectAll('div.A-box')
       .data(
@@ -171,8 +174,9 @@ export class APG {
           return node
         }
       )
-        .style('left', d => `${this._program._boxes.get(d).x}px`)
-        .style('top', d => `${this._program._boxes.get(d).y}px`)
+        .style('left', d => `${this._program._boxes.get(d).x * zoom.k + zoom.x}px`)
+        .style('top', d => `${this._program._boxes.get(d).y * zoom.k + zoom.y}px`)
+        .style('transform', d => `scale(${zoom.k})`)
 
     // highlight the endpoint of the current pending wire (if any)
     d3.select(this._root)
@@ -208,11 +212,12 @@ export class APG {
       .join('path')
         .attr('id', d => `A-wire-${d}`)
         .attr('d', (d) => {
-          let x1 = locatePlug(d, 'src', 'x') - 14
-          let y1 = locatePlug(d, 'src', 'y') + 10
-          let x2 = locatePlug(d, 'dest', 'x') - 14
-          let y2 = locatePlug(d, 'dest', 'y') + 10
-          return `M${x1},${y1} C${x1-10},${y1} ${x2-10},${y2} ${x2},${y2}`
+          // TODO: fix this magic number jankiness
+          let x1 = locatePlug(d, 'src', 'x') - 14 * zoom.k
+          let y1 = locatePlug(d, 'src', 'y') + 10 * zoom.k
+          let x2 = locatePlug(d, 'dest', 'x') - 14 * zoom.k
+          let y2 = locatePlug(d, 'dest', 'y') + 10 * zoom.k
+          return `M${x1},${y1} C${x1-10 * zoom.k},${y1} ${x2-10 * zoom.k},${y2} ${x2},${y2}`
         })
         .on('click', (wireId) => {
           if (d3.event.altKey) {
