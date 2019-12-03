@@ -129,8 +129,9 @@ export class APG {
                 .on('drag', () => {
                   let box = d3.event.subject
                   let {movementX, movementY} = d3.event.sourceEvent
-                  this._program._boxes.get(box).x += movementX
-                  this._program._boxes.get(box).y += movementY
+                  let zoom = d3.zoomTransform(this._root)
+                  this._program._boxes.get(box).x += movementX / zoom.k
+                  this._program._boxes.get(box).y += movementY / zoom.k
                   this.refreshProgram()
                 })
                 .on('end', () => {this.saveProgram()})
