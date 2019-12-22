@@ -27,9 +27,29 @@ export class APG {
           }
         })
 
-    d3.select(this._root)
-        .call(d3.zoom().on('zoom', () => this.refreshProgram()))
-        .on('dblclick.zoom', null)
+    let zoom = d3.zoom()
+      .on('zoom', () => this.refreshProgram())
+      .filter(() => {
+        // this is the same behavior as the default filter:
+        // ignore secondary buttons, such as right-click
+        if (d3.event.ctrlKey || d3.event.button) {
+          return false
+        }
+
+        // ignore double-click
+        if (d3.event.type === 'dblclick') {
+          return false
+        }
+
+        // ignore mousedown on anything other than the program area
+        // (e.g. on particular boxes)
+        if (d3.event.target !== this._root) {
+          return false;
+        }
+
+        return true
+      })
+    d3.select(this._root).call(zoom)
 
     // when non-empty, this is an object with either two properties
     // (srcBox, srcPlug) or two properties (destBox, destPlug)
