@@ -20,14 +20,16 @@ export class APG {
     d3.select(this._toolboxRoot).append('ul')
 
     d3.select('body')
-      .on('keypress', () => {
-        if (d3.event.code === 'KeyQ') {
-          let toolbox = d3.select(this._toolboxRoot)
-          toolbox.classed('A-visible', !toolbox.classed('A-visible'))
-        }
-      })
+        .on('keypress', () => {
+          if (d3.event.code === 'KeyQ') {
+            let toolbox = d3.select(this._toolboxRoot)
+            toolbox.classed('A-visible', !toolbox.classed('A-visible'))
+          }
+        })
 
-    d3.select(this._root).call(d3.zoom().on('zoom', () => this.refreshProgram()))
+    d3.select(this._root)
+        .call(d3.zoom().on('zoom', () => this.refreshProgram()))
+        .on('dblclick.zoom', null)
 
     // when non-empty, this is an object with either two properties
     // (srcBox, srcPlug) or two properties (destBox, destPlug)
