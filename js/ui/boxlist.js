@@ -34,7 +34,7 @@ export class BoxList {
           this.setVisibility(false)
           // TODO: make this stick to the pointer until placed, or something
           this.modifyProgram(program => {
-            program.addBox(new box(), null, d3.event.x - 100, d3.event.y - 100)
+            program.addBox(new box(), null, d3.event.x, d3.event.y)
           })
         })
   }
