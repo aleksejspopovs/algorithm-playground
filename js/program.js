@@ -189,7 +189,7 @@ export class APGProgram {
     if (!this._apg) {
       return
     }
-    this._workQueue.pushPrioritized(() => this._apg.refreshProgram())
+    this._workQueue.pushPrioritized(() => this._apg.refreshProgramStructure())
     this.performWork()
   }
 
