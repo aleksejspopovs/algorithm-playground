@@ -3,6 +3,7 @@ import {APGProgram} from './program.js'
 
 import {BoxList} from './ui/boxlist.js'
 import {ProgramView} from './ui/programview.js'
+import {Toolbar} from './ui/toolbar.js'
 
 export class APG {
   constructor (root) {
@@ -30,6 +31,9 @@ export class APG {
 
     let boxListRoot = this.root.append('div')
     this.boxList = new BoxList(boxListRoot, getProgram, modifyProgram)
+
+    let toolbarRoot = this.root.append('div')
+    this.toolbar = new Toolbar(toolbarRoot, this)
 
     d3.select('body')
         .on('keypress', () => {
