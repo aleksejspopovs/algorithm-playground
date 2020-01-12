@@ -9,13 +9,18 @@ export class APG {
   constructor (root) {
     this.root = d3.select(root)
 
+    this._program = null
     let savedProgram = window.localStorage.program
     if (savedProgram === undefined) {
-      this._program = new APGProgram()
+      this.newProgram()
     } else {
-      this._program = APGProgram.load(savedProgram)
+      try {
+        this.loadProgram(savedProgram)
+      } catch (e) {
+        console.error('error while loading saved program:', e)
+        this.newProgram()
+      }
     }
-    this._program.attachToUi(this)
 
     let getProgram = () => {
       return this._program
@@ -63,7 +68,25 @@ export class APG {
     this.programView.flashWireActivity(id)
   }
 
+  setProgram (program) {
+    if (this._program !== null) {
+      this._program.attachToUi(null)
+    }
+    this._program = program
+    this._program.attachToUi(this)
+    this.programView && this.programView.newProgramLoaded()
+  }
+
+  newProgram () {
+    this.setProgram(new APGProgram())
+  }
+
+  loadProgram (serialized) {
+    this.setProgram(APGProgram.load(serialized))
+  }
+
   saveProgram () {
+    this._program._viewParams = this.programView.getParams()
     window.localStorage.program = this._program.save()
   }
 }

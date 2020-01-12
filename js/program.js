@@ -25,6 +25,7 @@ export class APGProgram {
     this._boxes = new Map()
     this._wires = new Map()
     this._wiresByPlug = {}
+    this._viewParams = {}
 
     this._workQueue = new TwoPriorityQueue()
     this._workHappening = false
@@ -254,7 +255,10 @@ export class APGProgram {
   }
 
   save () {
-    let serialized = {}
+    let serialized = {
+      'apg': true,
+      'version': 1,
+    }
     serialized.boxes = []
     for (let [id, box] of this._boxes.entries()) {
       serialized.boxes.push({id: id, x: box.x, y: box.y, type: box.object.constructor._typeId()})
@@ -263,19 +267,28 @@ export class APGProgram {
       this._wires.entries(),
       ([id, wire]) => ({id, ...wire})
     )
+    serialized.viewParams = this._viewParams
     return JSON.stringify(serialized)
   }
 
   static load (string) {
-    let {boxes, wires} = JSON.parse(string)
+    let serialized = JSON.parse(string)
+    if (serialized.apg !== true) {
+      throw new Error('file is not an APG program')
+    }
+    if (serialized.version !== 1) {
+      throw new Error(`unexpected program version ${serialized.version}`)
+    }
+
     let program = new APGProgram()
-    for (let {id, x, y, type} of boxes) {
+    for (let {id, x, y, type} of serialized.boxes) {
       let boxType = BoxIndex.get(type)
       program.addBox(new boxType(), id, x, y)
     }
-    for (let {id, srcBox, srcPlug, destBox, destPlug} of wires) {
+    for (let {id, srcBox, srcPlug, destBox, destPlug} of serialized.wires) {
       program.addWire(srcBox, srcPlug, destBox, destPlug)
     }
+    program._viewParams = serialized.viewParams
     return program
   }
 }

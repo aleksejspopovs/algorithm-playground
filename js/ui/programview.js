@@ -8,6 +8,8 @@ export class ProgramView {
 
     let zoom = d3.zoom()
       .on('zoom', () => this.refreshStructure())
+      // we call modifyProgram to save the new zoom state
+      .on('end', () => this.modifyProgram(() => {}))
       .filter(() => {
         // this is the same behavior as the default filter:
         // ignore secondary buttons, such as right-click
@@ -41,6 +43,17 @@ export class ProgramView {
       }
     }, true)
 
+    this.newProgramLoaded()
+  }
+
+  newProgramLoaded () {
+    let savedZoom = this.getProgram()._viewParams.zoom
+    if (savedZoom !== undefined) {
+      let transform = d3.zoomIdentity
+        .translate(savedZoom.x, savedZoom.y)
+        .scale(savedZoom.k)
+      d3.zoom().transform(this.boxRoot, transform)
+    }
     this.refreshStructure()
     this.refreshAllBoxes()
   }
@@ -259,5 +272,12 @@ export class ProgramView {
     wire.transition()
         .duration(250)
         .style('stroke-dashoffset', `${initialOffset - 20}px`)
+  }
+
+  getParams () {
+    // this is stuff we want to save when saving the program
+    return {
+      'zoom': d3.zoomTransform(this.boxRoot.node()),
+    }
   }
 }
