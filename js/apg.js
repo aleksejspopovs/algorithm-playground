@@ -28,7 +28,7 @@ export class APG {
 
     let modifyProgram = (f) => {
       f(this._program)
-      this.saveProgram()
+      this.saveProgramToLocalStorage()
     }
 
     let programRoot = this.root.append('div')
@@ -75,6 +75,7 @@ export class APG {
     this._program = program
     this._program.attachToUi(this)
     this.programView && this.programView.newProgramLoaded()
+    this.saveProgramToLocalStorage()
   }
 
   newProgram () {
@@ -85,8 +86,14 @@ export class APG {
     this.setProgram(APGProgram.load(serialized))
   }
 
-  saveProgram () {
-    this._program._viewParams = this.programView.getParams()
-    window.localStorage.program = this._program.save()
+  serializeProgram () {
+    if (this.programView) {
+      this._program._viewParams = this.programView.getParams()
+    }
+    return this._program.save()
+  }
+
+  saveProgramToLocalStorage () {
+    window.localStorage.program = this.serializeProgram()
   }
 }
