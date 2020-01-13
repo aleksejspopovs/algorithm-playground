@@ -64,8 +64,8 @@ export class APGProgram {
 
     box.attachToProgram(this, id)
 
-    this.scheduleProgramRefresh()
-    this.scheduleBoxRefresh(id)
+    this.refreshProgramStructure()
+    this.refreshBox(id)
 
     return id
   }
@@ -91,7 +91,7 @@ export class APGProgram {
 
     // TODO: each call to deleteWire also scheduled a refresh,
     // any way to dedup?
-    this.scheduleProgramRefresh()
+    this.refreshProgramStructure()
   }
 
   getBox (id) {
@@ -130,7 +130,7 @@ export class APGProgram {
     let destPlugFullName = qualifiedPlugName(destBox, 'in', destPlug)
     this._wiresByPlug[destPlugFullName].add(id)
 
-    this.scheduleProgramRefresh()
+    this.refreshProgramStructure()
 
     // update dest value if src value not null
     let srcPlugObj = this._boxes.get(srcBox).object.output[srcPlug]
@@ -155,7 +155,7 @@ export class APGProgram {
 
     this._wires.delete(id)
 
-    this.scheduleProgramRefresh()
+    this.refreshProgramStructure()
   }
 
   scheduleProcessing (boxId, f) {
@@ -179,27 +179,19 @@ export class APGProgram {
         error = e
       } finally {
         this._boxes.get(boxId).object._isProcessing = false
-        this.scheduleBoxRefresh(boxId)
+        this.refreshBox(boxId)
         this._apg && this._apg.finishBoxProcessing(boxId, error)
       }
     })
     this.performWork()
   }
 
-  scheduleProgramRefresh () {
-    if (!this._apg) {
-      return
-    }
-    this._workQueue.pushPrioritized(() => this._apg.refreshProgramStructure())
-    this.performWork()
+  refreshProgramStructure () {
+    this._apg && this._apg.refreshProgramStructure()
   }
 
-  scheduleBoxRefresh (boxId) {
-    if (!this._apg) {
-      return
-    }
-    this._workQueue.pushPrioritized(() => this._apg.refreshBox(boxId))
-    this.performWork()
+  refreshBox (boxId) {
+    this._apg && this._apg.refreshBox(boxId)
   }
 
   schedulePlugUpdate (boxId, plugName, value) {
@@ -225,18 +217,7 @@ export class APGProgram {
     }
 
     let yieldControl = () => {
-      // when a box yields control, we try to do a quick UI job.
-      // for this to work well, UI jobs *must* actually be quick.
-      if (this._workQueue.hasPrioritizedJobs()) {
-        let job = this._workQueue.pop()
-        try {
-          job(() => null)
-        } catch (e) {
-          console.error('uncaught error in work queue', e)
-        }
-      }
-      // regardless of what happens, we also set a zero-duration
-      // timeout, which lets the browser do repaints and stuff
+      // set a zero-duration timeout, which lets the browser do repaints
       // and keeps the UI responsive.
       return new Promise(resolve => setTimeout(resolve, 0))
     }
