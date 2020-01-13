@@ -86,14 +86,7 @@ export class APG {
     this.setProgram(APGProgram.load(serialized))
   }
 
-  serializeProgram () {
-    if (this.programView) {
-      this._program._viewParams = this.programView.getParams()
-    }
-    return this._program.save()
-  }
-
   saveProgramToLocalStorage () {
-    window.localStorage.program = this.serializeProgram()
+    window.localStorage.program = this._program.save()
   }
 }

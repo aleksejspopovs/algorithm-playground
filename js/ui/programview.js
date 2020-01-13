@@ -8,8 +8,9 @@ export class ProgramView {
 
     let zoom = d3.zoom()
       .on('zoom', () => this.refreshStructure())
-      // we call modifyProgram to save the new zoom state
-      .on('end', () => this.modifyProgram(() => {}))
+      .on('end', () => this.modifyProgram((program) => {
+        program._viewParams = this.getParams()
+      }))
       .filter(() => {
         // this is the same behavior as the default filter:
         // ignore secondary buttons, such as right-click
