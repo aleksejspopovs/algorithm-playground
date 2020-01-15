@@ -267,7 +267,7 @@ export class APGProgram {
       program.addBox(new boxType(), id, x, y)
     }
     for (let {id, srcBox, srcPlug, destBox, destPlug} of serialized.wires) {
-      program.addWire(srcBox, srcPlug, destBox, destPlug)
+      program.addWire(srcBox, srcPlug, destBox, destPlug, id)
     }
     program._viewParams = serialized.viewParams
     return program
