@@ -117,7 +117,7 @@ export class Scheduler {
 
           // we wrap the task in an async call.
           // if the task is an async function, this does nothing.
-          // if the task if a regular function, this will transform
+          // if the task is a regular function, this will transform
           // it into an async one (so we can treat it as a promise, and
           // exceptions will be turned into that promise being rejected).
           let taskAsync = async (yieldControl) => await task(yieldControl)
