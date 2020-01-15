@@ -159,7 +159,7 @@ export class APGProgram {
     // update dest value if src value not null
     let srcPlugObj = this._boxes.get(srcBox).object.output[srcPlug]
     if (srcPlugObj._value !== null) {
-      this.schedulePlugUpdate(destBox, destPlug, srcPlugObj._value)
+      this.schedulePlugUpdate(destBox, destPlug, srcPlugObj._value, id)
     }
 
     return id
@@ -195,10 +195,18 @@ export class APGProgram {
     this._apg && this._apg.refreshBox(boxId)
   }
 
-  schedulePlugUpdate (boxId, plugName, value) {
+  flashWireActivity (wire) {
+    this._apg && this._apg.flashWireActivity(wire)
+  }
+
+  schedulePlugUpdate (boxId, plugName, value, wire) {
     this.scheduleProcessing(
       boxId,
-      (yieldControl) => this._boxes.get(boxId).object.input[plugName]._write(value, yieldControl)
+      (yieldControl) => {
+        let result = this._boxes.get(boxId).object.input[plugName]._write(value, yieldControl)
+        this._scheduler.deferWireFlash(wire)
+        return result
+      }
     )
   }
 
@@ -207,8 +215,7 @@ export class APGProgram {
 
     for (let [_, wire] of this._wiresByPlug[plugFullName].entries()) {
       let {destBox, destPlug} = this._wires.get(wire)
-      this.schedulePlugUpdate(destBox, destPlug, value)
-      this._apg && this._apg.flashWireActivity(wire)
+      this.schedulePlugUpdate(destBox, destPlug, value, wire)
     }
   }
 

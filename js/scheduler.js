@@ -15,6 +15,9 @@ export class Scheduler {
     this.currentActiveBox = null
     this.lastUiUpdate = 0
     this.running = false
+
+    this.boxesToRefresh = new Set()
+    this.wiresToAnimate = new Set()
   }
 
   addTask (boxId, task) {
@@ -62,6 +65,30 @@ export class Scheduler {
     return task
   }
 
+  performDeferredUiUpdates () {
+    for (let boxId of this.boxesToRefresh) {
+      // need to check if the box still exists, since it might have been
+      // deleted in between the time when we marked it as needing an update
+      // and now.
+      if (this.program._boxes.has(boxId)) {
+        this.program.refreshBox(boxId)
+      }
+    }
+    this.boxesToRefresh.clear()
+
+    for (let wire of this.wiresToAnimate) {
+      // check if the wire still exists (as above).
+      if (this.program._wires.has(wire)) {
+        this.program.flashWireActivity(wire)
+      }
+    }
+    this.wiresToAnimate.clear()
+  }
+
+  deferWireFlash (wire) {
+    this.wiresToAnimate.add(wire)
+  }
+
   async run () {
     if (this.running) {
       return
@@ -73,6 +100,7 @@ export class Scheduler {
       if ((new Date()).getTime() - this.lastUiUpdate > MaxUiDelayMs) {
         // it's been too long since we last let the browser update
         // the UI
+        this.performDeferredUiUpdates()
         let delay = new Promise(resolve => setTimeout(resolve, 0))
         await delay
         this.lastUiUpdate = (new Date()).getTime()
@@ -104,7 +132,7 @@ export class Scheduler {
       let taskFinished = error => {
         assert(box.object._isProcessing)
         box.object._isProcessing = false
-        this.program.refreshBox(boxId)
+        this.boxesToRefresh.add(boxId)
         this.popActiveTask(boxId, error)
       }
 
@@ -163,6 +191,7 @@ export class Scheduler {
       }
     }
 
+    this.performDeferredUiUpdates()
     this.running = false
   }
 }
