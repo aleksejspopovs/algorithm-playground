@@ -123,31 +123,26 @@ export class Scheduler {
           let taskAsync = async (yieldControl) => await task(yieldControl)
           let result = taskAsync(yieldControl)
 
-          if (result instanceof Promise) {
-            // the task returned a promise. yieldControl should've taken
-            // care of updating the status to Paused.
-
-            if (box.activeTaskState === TaskState.Paused) {
-              // the task awaited on yieldControl, so we'll let it
-              // finish up asynchronously whenever it's ready.
-              box.activeTaskDone = result.then(
-                (value) => taskFinished(null),
-                (error) => taskFinished(error),
-              )
-            } else {
-              // the task didn't await on yieldControl, so (assuming it
-              // didn't await on anything else, which it isn't supposed to
-              // do) it must be finished (possibly with an error).
-              // we await on it so that we can throw it out of the queue
-              // immediately and carry on.
-              let error = null
-              try {
-                await result
-              } catch (e) {
-                error = e
-              } finally {
-                taskFinished(error)
-              }
+          if (box.activeTaskState === TaskState.Paused) {
+            // the task awaited on yieldControl, so we'll let it
+            // finish up asynchronously whenever it's ready.
+            box.activeTaskDone = result.then(
+              (value) => taskFinished(null),
+              (error) => taskFinished(error),
+            )
+          } else {
+            // the task didn't await on yieldControl, so (assuming it
+            // didn't await on anything else, which it isn't supposed to
+            // do) it must be finished (possibly with an error).
+            // we await on it so that we can throw it out of the queue
+            // immediately and carry on.
+            let error = null
+            try {
+              await result
+            } catch (e) {
+              error = e
+            } finally {
+              taskFinished(error)
             }
           }
         break;
