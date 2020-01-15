@@ -1,6 +1,7 @@
 import {generateUnusedKey} from './utils/objects.js'
-import {TwoPriorityQueue} from './utils/queue.js'
+import {Queue} from './utils/queue.js'
 import {BoxIndex} from './boxes/index.js'
+import {Scheduler, TaskState} from './scheduler.js'
 
 function qualifiedPlugName(boxId, dir, plugName) {
   if (dir === 'in') {
@@ -14,8 +15,32 @@ function qualifiedPlugName(boxId, dir, plugName) {
 class BoxWithMetadata {
   constructor (box, x = 0, y = 0) {
     this.object = box
+
+    // position on screen
     this.x = x
     this.y = y
+
+    // scheduler-related state:
+    // queue of tasks
+    this.tasks = new Queue()
+    // pointers to next and previous active box in the round-robin queue
+    this.nextActive = null
+    this.prevActive = null
+    // state of the current task at the front of the queue
+    this.activeTaskState = TaskState.NotStarted
+    // extra state that's relevant when the active task is/has been paused:
+    //   - a function to call to resume execution
+    this.activeTaskResume = null
+    //   - a promise that will resolve after the task is finished
+    this.activeTaskDone = null
+    //   - a promise that will resolve if the task is paused *again*
+    this.activeTaskPaused = null
+    //   - a function that resolves activeTaskPaused
+    this.activeTaskNotifyPause = null
+  }
+
+  active () {
+    return !this.tasks.empty()
   }
 }
 
@@ -27,8 +52,7 @@ export class APGProgram {
     this._wiresByPlug = {}
     this._viewParams = {}
 
-    this._workQueue = new TwoPriorityQueue()
-    this._workHappening = false
+    this._scheduler = new Scheduler(this)
   }
 
   attachToUi (apg) {
@@ -89,8 +113,8 @@ export class APGProgram {
 
     this._boxes.delete(id)
 
-    // TODO: each call to deleteWire also scheduled a refresh,
-    // any way to dedup?
+    // TODO: clear tasks
+
     this.refreshProgramStructure()
   }
 
@@ -159,31 +183,8 @@ export class APGProgram {
   }
 
   scheduleProcessing (boxId, f) {
-    this._workQueue.pushRegular(async yieldControl => {
-      if (this._boxes.get(boxId).object._isProcessing) {
-        throw new Error('trying to enter processing mode on box already in it')
-      }
-      this._boxes.get(boxId).object._isProcessing = true
-      this._apg && this._apg.startBoxProcessing(boxId)
-
-      var error = null
-      try {
-        // processing functions might return a Promise. if so, we
-        // consider processing to last until that function returns.
-        // it is okay to await on non-Promise values: in that case
-        // the await completes immediately. so processing functions
-        // can also be simple synchronous functions.
-        await f(yieldControl)
-      } catch (e) {
-        console.error('caught error while processing box', boxId, e)
-        error = e
-      } finally {
-        this._boxes.get(boxId).object._isProcessing = false
-        this.refreshBox(boxId)
-        this._apg && this._apg.finishBoxProcessing(boxId, error)
-      }
-    })
-    this.performWork()
+    this._scheduler.addTask(boxId, f)
+    this._scheduler.run()
   }
 
   refreshProgramStructure () {
@@ -209,30 +210,6 @@ export class APGProgram {
       this.schedulePlugUpdate(destBox, destPlug, value)
       this._apg && this._apg.flashWireActivity(wire)
     }
-  }
-
-  async performWork () {
-    if (this._workHappening) {
-      return
-    }
-
-    let yieldControl = () => {
-      // set a zero-duration timeout, which lets the browser do repaints
-      // and keeps the UI responsive.
-      return new Promise(resolve => setTimeout(resolve, 0))
-    }
-
-    this._workHappening = true
-    while (!this._workQueue.empty()) {
-      let job = this._workQueue.pop()
-
-      try {
-        await job(yieldControl)
-      } catch (e) {
-        console.error('uncaught error in work queue', e)
-      }
-    }
-    this._workHappening = false
   }
 
   save () {

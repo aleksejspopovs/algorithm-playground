@@ -26,40 +26,15 @@ export class Queue {
     return result
   }
 
+  peek () {
+    if (this._index >= this._store.length) {
+      throw new Error('peeking an empty queue')
+    }
+
+    return this._store[this._index]
+  }
+
   empty () {
     return this._index === this._store.length
-  }
-}
-
-
-export class TwoPriorityQueue {
-  constructor () {
-    this._queues = [new Queue(), new Queue()]
-  }
-
-  pushRegular (element) {
-    this._queues[1].push(element)
-  }
-
-  pushPrioritized (element) {
-    this._queues[0].push(element)
-  }
-
-  pop () {
-    if (!this._queues[0].empty()) {
-      return this._queues[0].pop()
-    } else if (!this._queues[1].empty()) {
-      return this._queues[1].pop()
-    } else {
-      throw new Error('popping an empty queue')
-    }
-  }
-
-  empty () {
-    return this._queues.every((q) => q.empty())
-  }
-
-  hasPrioritizedJobs () {
-    return !this._queues[0].empty()
   }
 }
