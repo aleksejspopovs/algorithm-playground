@@ -3,6 +3,9 @@ export class ProgramView {
     this.boxRoot = root.append('div').classed('A-program', true)
     this.wireRoot = root.append('svg').classed('A-wires', true)
 
+    // programEpoch is a counter, incremented each time we load a
+    // new program.
+    this.programEpoch = 0
     this.getProgram = getProgram
     this.modifyProgram = modifyProgram
 
@@ -48,6 +51,7 @@ export class ProgramView {
   }
 
   newProgramLoaded () {
+    this.programEpoch++
     let savedZoom = this.getProgram()._viewParams.zoom
     if (savedZoom !== undefined) {
       let transform = d3.zoomIdentity
@@ -73,6 +77,12 @@ export class ProgramView {
       this.refreshStructure()
     }
 
+    // because of javascript scope/`this` shenanigans, we need to use an
+    // old-style anonymous function in some places below, and its `this`
+    // will be bound to something different, so we need to retain a reference
+    // to the ProgramView object.
+    let self = this
+
     // draw boxes
     let zoom = d3.zoomTransform(this.boxRoot.node())
     this.boxRoot
@@ -81,13 +91,29 @@ export class ProgramView {
         Array.from(this.getProgram()._boxes.keys()),
         // this needs to be a regular function because `this`
         // works differently for lambdas
-        function (d) { return d ? d : `A-box-${this.id}` }
+        function (d) {
+          // this part of D3 is absolutely ridiculous.
+          // we want to manually match boxes to HTML elements, so we're supplying
+          // a key function. D3 will call this function for each box, and then
+          // *also* for each element. when it's calling it for boxes, the box ID is
+          // in the first parameter (`d`) and `this` is set to the parent element
+          // of the selection (so the div.A-program in our case), and we want to return
+          // a key to be used for that box. when it's calling it for elements, `this`
+          // is the element and `d` is the box ID that is currently matched to it, and
+          // we want to return a key for the element.
+
+          // this takes care of programEpoch trickery (when we open a new program, there
+          // might be a new box in there with an ID that matches that of some box in
+          // the old program, and we want to give this new box a whole new element of
+          // its own, not reuse the old one)
+          return this.classList.contains('A-box') ? this.id : self.getNodeIdForBox(d)
+        }
       )
       .join(
         enter => {
           let node = enter.append('div')
           node.classed('A-box', true)
-              .attr('id', d => `A-box-${d}`)
+              .attr('id', d => this.getNodeIdForBox(d))
 
           // veil (covers the box completely, used to indicate when the
           // box is busy)
@@ -134,12 +160,6 @@ export class ProgramView {
               .classed('A-error', true)
               .text('⚠️')
 
-          // render area
-          // because of javascript scope/`this` shenanigans, we need to use an
-          // old-style anonymous function below, and its `this` will be bound
-          // to the current DOM element, so we need to retain a reference to
-          // the APG object.
-          let self = this
           node.append('div')
                 .classed('A-inner', true)
               .select(function (d) {
@@ -221,8 +241,12 @@ export class ProgramView {
         })
   }
 
+  getNodeIdForBox (id) {
+    return `A-box-${this.programEpoch}-${id}`
+  }
+
   getNodeForBox (id) {
-    let root = document.getElementById(`A-box-${id}`)
+    let root = document.getElementById(this.getNodeIdForBox(id))
     if (!root) {
       // node not created yet, so let's just not render
       return null
@@ -242,17 +266,17 @@ export class ProgramView {
     this.getProgram()._boxes.forEach((_, id) => this.refreshBox(id))
   }
 
-  startBoxProcessing (id) {
+  startBoxProcessing (boxId) {
     this.boxRoot
-      .select(`#A-box-${id}`)
+      .select(`#${this.getNodeIdForBox(boxId)}`)
       .select('.A-veil')
         .interrupt('finish-processing')
         .style('pointer-events', 'all')
         .style('opacity', 0.25)
   }
 
-  finishBoxProcessing (id, error) {
-    let box = this.boxRoot.select(`#A-box-${id}`)
+  finishBoxProcessing (boxId, error) {
+    let box = this.boxRoot.select(`#${this.getNodeIdForBox(boxId)}`)
 
     box.select('.A-error')
         .classed('A-visible', error !== null)
