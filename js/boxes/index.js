@@ -25,6 +25,10 @@ registerBox(ThreeSatToDomSet)
 import {SlowComputation} from './debug.js'
 registerBox(SlowComputation)
 
+import {Add, Mul} from './arithmetic.js'
+registerBox(Add)
+registerBox(Mul)
+
 function registerBox(box) {
   let meta = box.metadata()
   if (!BoxCategories.has(meta.category)) {
