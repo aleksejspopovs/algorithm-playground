@@ -124,8 +124,9 @@ export class Scheduler {
           let result = taskAsync(yieldControl)
 
           if (box.activeTaskState === TaskState.Paused) {
-            // the task awaited on yieldControl, so we'll let it
-            // finish up asynchronously whenever it's ready.
+            // the task awaited on yieldControl. we'll resume it at
+            // some future point, but now we just set up some handlers
+            // for when it's finished.
             box.activeTaskDone = result.then(
               (value) => taskFinished(null),
               (error) => taskFinished(error),
