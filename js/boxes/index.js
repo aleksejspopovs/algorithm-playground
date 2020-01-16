@@ -22,8 +22,9 @@ registerBox(Formula)
 import {ThreeSatToDomSet} from './threesat_to_domset.js'
 registerBox(ThreeSatToDomSet)
 
-import {SlowComputation} from './debug.js'
+import {SlowComputation, AwaitCounter} from './debug.js'
 registerBox(SlowComputation)
+registerBox(AwaitCounter)
 
 import {Add, Mul} from './arithmetic.js'
 registerBox(Add)

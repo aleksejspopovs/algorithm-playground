@@ -1,4 +1,4 @@
-Every box has an associated queue of tasks. A task is created when processing is scheduled for the box (in response to new values on the input plugs or UI events). A box is active if its queue is nonempty, and the task at the front of its queue is called its active task.
+Every box has an associated queue of tasks. A task is created when processing is scheduled for the box (in response to new values on the input plugs or UI events). A box is active if its queue is nonempty and the task at the front of its queue is not in an `AWAITING` state (see below). That task is called the box's active task.
 
 At any time, only active tasks can be executing. Tasks use cooperative multitasking, so a long-running task can choose to yield in order to allow other boxes' tasks to do work or the UI to update. A task can also yield-await, that is, notify the scheduler that it has no work to do until a given promise resolves.
 

@@ -20,19 +20,44 @@ export class Scheduler {
     this.wiresToAnimate = new Set()
   }
 
+  makeBoxActive (boxId) {
+    let box = this.program._boxes.get(boxId)
+    assert(box.prevActive === null)
+    assert(box.nextActive === null)
+
+    if (this.currentActiveBox === null) {
+      this.currentActiveBox = boxId
+      box.nextActive = box.prevActive = boxId
+    } else {
+      box.prevActive = this.currentActiveBox
+      box.nextActive = this.program._boxes.get(this.currentActiveBox).nextActive
+      this.program._boxes.get(box.prevActive).nextActive = boxId
+      this.program._boxes.get(box.nextActive).prevActive = boxId
+    }
+  }
+
+  makeBoxInactive (boxId) {
+    let box = this.program._boxes.get(boxId)
+    assert(box.prevActive !== null)
+    assert(box.nextActive !== null)
+
+    if (box.nextActive === boxId) {
+      this.currentActiveBox = null
+    } else {
+      if (this.currentActiveBox === boxId) {
+        this.currentActiveBox = box.nextActive
+      }
+      this.program._boxes.get(box.nextActive).prevActive = box.prevActive
+      this.program._boxes.get(box.prevActive).nextActive = box.nextActive
+    }
+    box.nextActive = box.prevActive = null
+  }
+
   addTask (boxId, task) {
     let box = this.program._boxes.get(boxId)
-    if (!box.active()) {
+    if (box.tasks.empty()) {
       // adding this task will make the box active
-      if (this.currentActiveBox === null) {
-        this.currentActiveBox = boxId
-        box.nextActive = box.prevActive = boxId
-      } else {
-        box.prevActive = this.currentActiveBox
-        box.nextActive = this.program._boxes.get(this.currentActiveBox).nextActive
-        this.program._boxes.get(box.prevActive).nextActive = boxId
-        this.program._boxes.get(box.nextActive).prevActive = boxId
-      }
+      this.makeBoxActive(boxId)
       this.program._apg && this.program._apg.startBoxProcessing(boxId)
     }
     box.tasks.push(task)
@@ -42,24 +67,18 @@ export class Scheduler {
     let box = this.program._boxes.get(boxId)
     let task = box.tasks.pop()
 
+    // TODO: move this out to BoxWithMetadata?
     box.activeTaskState = TaskState.NotStarted
     box.activeTaskResume = null
+    box.activeTaskTerminate = null
+    box.activeTaskPromiseReturnValue = null
     box.activeTaskDone = null
     box.activeTaskPaused = null
     box.activeTaskNotifyPause = null
 
-    if (!box.active()) {
+    if (box.tasks.empty()) {
       // this was the last task, so the box is no longer active
-      if (box.nextActive === boxId) {
-        this.currentActiveBox = null
-      } else {
-        if (this.currentActiveBox === boxId) {
-          this.currentActiveBox = box.nextActive
-        }
-        this.program._boxes.get(box.nextActive).prevActive = box.prevActive
-        this.program._boxes.get(box.prevActive).nextActive = box.nextActive
-      }
-      box.nextActive = box.prevActive = null
+      this.makeBoxInactive(boxId)
       this.program._apg && this.program._apg.finishBoxProcessing(boxId, error)
     }
     return task
@@ -111,17 +130,44 @@ export class Scheduler {
       this.currentActiveBox = box.nextActive
 
       let yieldControl = waitOn => {
-        assert(waitOn === undefined, 'waiting not implemented yet')
-
         if (box.activeTaskNotifyPause !== null) {
           box.activeTaskNotifyPause()
         }
-
-        box.activeTaskState = TaskState.Paused
         assert(box.object._isProcessing)
         box.object._isProcessing = false
-        let promise = new Promise(resolve => {
+
+        if (waitOn) {
+          // the task wants to wait on a promise.
+          // prevent the task from being scheduled again for now
+          box.activeTaskState = TaskState.Awaiting
+          this.makeBoxInactive(boxId)
+          waitOn.then(
+            value => {
+              box.activeTaskPromiseReturnValue = [true, value]
+            },
+            error => {
+              box.activeTaskPromiseReturnValue = [false, error]
+            }
+          ).finally(() => {
+            // when the waitOn promise resolves, keep the return value/error
+            // and make it look like the box was just paused so that the
+            // scheduler can schedule it again
+            box.activeTaskState = TaskState.Paused
+            this.makeBoxActive(boxId)
+            // it's possible that the scheduler ran out of tasks and
+            // terminated while we were waiting for the promise to resolve,
+            // so we need to try running it
+            this.run()
+          })
+        } else {
+          // the task wants to simply yield execution for a little bit
+          box.activeTaskState = TaskState.Paused
+          box.activeTaskPromiseReturnValue = [true, null]
+        }
+
+        let promise = new Promise((resolve, reject) => {
           box.activeTaskResume = resolve
+          box.activeTaskTerminate = reject
         })
         box.activeTaskPaused = new Promise(resolve => {
           box.activeTaskNotifyPause = resolve
@@ -151,7 +197,10 @@ export class Scheduler {
           let taskAsync = async (yieldControl) => await task(yieldControl)
           let result = taskAsync(yieldControl)
 
-          if (box.activeTaskState === TaskState.Paused) {
+          if (
+            (box.activeTaskState === TaskState.Paused)
+            || (box.activeTaskState === TaskState.Awaiting)
+          ) {
             // the task awaited on yieldControl. we'll resume it at
             // some future point, but now we just set up some handlers
             // for when it's finished.
@@ -180,11 +229,20 @@ export class Scheduler {
           assert(!box.object._isProcessing)
           box.object._isProcessing = true
 
-          box.activeTaskResume({})
+          let [promiseStatus, promiseValue] = box.activeTaskPromiseReturnValue
+          if (promiseStatus) {
+            // either the task didn't await on any promise, or the promise
+            // resolved successfuly
+            box.activeTaskResume({data: promiseValue})
+          } else {
+            // the task awaited on a promise that rejected
+            box.activeTaskTerminate(promiseValue)
+          }
 
           // we want to wait until this task either completes or pauses again.
           await Promise.race([box.activeTaskDone, box.activeTaskPaused])
         break;
+        // we do *not* expect to find Awaiting or Executing tasks here
         default:
           assert(false, `unexpected task state ${box.activeTaskState}`)
         break;

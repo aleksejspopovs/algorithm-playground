@@ -31,6 +31,12 @@ class BoxWithMetadata {
     // extra state that's relevant when the active task is/has been paused:
     //   - a function to call to resume execution
     this.activeTaskResume = null
+    //   - a function to call to terminate execution with an exception
+    this.activeTaskTerminate = null
+    //   - (when the task awaited on a promise) a tuple (s, v) where s is true
+    //     if the promise resolved and false if the promise rejected, and v
+    //     is the return value or error
+    this.activeTaskPromiseReturnValue = null
     //   - a promise that will resolve after the task is finished
     this.activeTaskDone = null
     //   - a promise that will resolve if the task is paused *again*
@@ -40,7 +46,7 @@ class BoxWithMetadata {
   }
 
   active () {
-    return !this.tasks.empty()
+    return (!this.tasks.empty()) && (this.activeTaskState != TaskState.Awaiting)
   }
 }
 
