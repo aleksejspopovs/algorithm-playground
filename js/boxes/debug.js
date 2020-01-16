@@ -50,6 +50,8 @@ export class AwaitCounter extends APGBox {
       name: generateUnusedKey(window.apgDebug_promises, 'promise'),
       counter: 0,
     }
+
+    window.apgDebug_promises.set(this.state.name, null)
   }
 
   static metadata () {
@@ -83,7 +85,7 @@ export class AwaitCounter extends APGBox {
     try {
       var {data} = await yieldControl(promise)
     } finally {
-      window.apgDebug_promises.delete(this.state.name)
+      window.apgDebug_promises.set(this.state.name, null)
     }
 
     let increment = (data !== undefined) ? data : 1
