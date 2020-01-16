@@ -26,23 +26,30 @@ class BoxWithMetadata {
     // pointers to next and previous active box in the round-robin queue
     this.nextActive = null
     this.prevActive = null
-    // state of the current task at the front of the queue
-    this.activeTaskState = TaskState.NotStarted
-    // extra state that's relevant when the active task is/has been paused:
-    //   - a function to call to resume execution
-    this.activeTaskResume = null
-    //   - a function to call to terminate execution with an exception
-    this.activeTaskTerminate = null
-    //   - (when the task awaited on a promise) a tuple (s, v) where s is true
-    //     if the promise resolved and false if the promise rejected, and v
-    //     is the return value or error
-    this.activeTaskPromiseReturnValue = null
-    //   - a promise that will resolve after the task is finished
-    this.activeTaskDone = null
-    //   - a promise that will resolve if the task is paused *again*
-    this.activeTaskPaused = null
-    //   - a function that resolves activeTaskPaused
-    this.activeTaskNotifyPause = null
+
+    this.resetActiveTaskState()
+  }
+
+  resetActiveTaskState () {
+    this.activeTask = {
+      // state of the task at the front of the queue
+      state: TaskState.NotStarted,
+      // extra state that's relevant when the active task is/has been paused:
+      //   - a function to call to resume execution
+      resume: null,
+      //   - a function to call to terminate execution with an exception
+      terminate: null,
+      //   - (when the task awaited on a promise) a tuple (s, v) where s is true
+      //     if the promise resolved and false if the promise rejected, and v
+      //     is the return value or error
+      promiseReturnValue: null,
+      //   - a promise that will resolve after the task is finished
+      done: null,
+      //   - a promise that will resolve if the task is paused *again*
+      paused: null,
+      //   - a function that resolves activeTaskPaused
+      notifyPause: null
+    }
   }
 
   active () {
