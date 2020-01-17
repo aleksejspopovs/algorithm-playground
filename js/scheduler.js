@@ -190,31 +190,18 @@ export class Scheduler {
           let taskAsync = async (yieldControl) => await task(yieldControl)
           let result = taskAsync(yieldControl)
 
-          if (
-            (box.activeTask.state === TaskState.Paused)
-            || (box.activeTask.state === TaskState.Awaiting)
-          ) {
-            // the task awaited on yieldControl. we'll resume it at
-            // some future point, but now we just set up some handlers
-            // for when it's finished.
-            box.activeTask.done = result.then(
-              (value) => taskFinished(null),
-              (error) => taskFinished(error),
-            )
-          } else {
+          box.activeTask.done = result.then(
+            (value) => taskFinished(null),
+            (error) => taskFinished(error),
+          )
+
+          if (box.activeTask.state === TaskState.Executing) {
             // the task didn't await on yieldControl, so (assuming it
             // didn't await on anything else, which it isn't supposed to
             // do) it must be finished (possibly with an error).
             // we await on it so that we can throw it out of the queue
             // immediately and carry on.
-            let error = null
-            try {
-              await result
-            } catch (e) {
-              error = e
-            } finally {
-              taskFinished(error)
-            }
+            await box.activeTask.done
           }
         break;
         case TaskState.Paused:
