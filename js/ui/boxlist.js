@@ -32,8 +32,9 @@ export class BoxList {
         .on('click', (box) => {
           this.setVisibility(false)
           // TODO: make this stick to the pointer until placed, or something
+          let [x, y] = this.apg.screenCoordsToProgram(d3.event.x, d3.event.y)
           this.apg.modifyProgram(program => {
-            program.addBox(new box(), null, d3.event.x, d3.event.y)
+            program.addBox(new box(), null, x, y)
           })
         })
   }

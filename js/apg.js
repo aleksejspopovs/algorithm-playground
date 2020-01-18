@@ -59,6 +59,10 @@ export class APG {
     this.programView.flashWireActivity(id)
   }
 
+  screenCoordsToProgram (x, y) {
+    return this.programView.screenCoordsToProgram(x, y)
+  }
+
   getProgram () {
     return this._program
   }

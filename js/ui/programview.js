@@ -304,4 +304,10 @@ export class ProgramView {
       'zoom': d3.zoomTransform(this.boxRoot.node()),
     }
   }
+
+  screenCoordsToProgram (x, y) {
+    let {x: rootX, y: rootY} = this.boxRoot.node().getBoundingClientRect()
+    let zoom = d3.zoomTransform(this.boxRoot.node())
+    return zoom.invert([x - rootX, y - rootY])
+  }
 }
