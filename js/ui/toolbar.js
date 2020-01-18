@@ -46,6 +46,9 @@ export class Toolbar {
     if (files.length > 0) {
       let file = files[0]
       file.text().then(text => this.apg.loadProgram(text))
+      // reset the <input> element so that if the user decides to open
+      // the same program again, a change event will be triggered again
+      this.openFileSelector.value = null
     }
   }
 
