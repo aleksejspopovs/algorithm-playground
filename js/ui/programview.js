@@ -51,13 +51,13 @@ export class ProgramView {
 
   newProgramLoaded () {
     this.programEpoch++
-    let savedZoom = this.apg.getProgram()._viewParams.zoom
-    if (savedZoom !== undefined) {
-      let transform = d3.zoomIdentity
-        .translate(savedZoom.x, savedZoom.y)
-        .scale(savedZoom.k)
-      d3.zoom().transform(this.boxRoot, transform)
-    }
+
+    let zoom = this.apg.getProgram()._viewParams.zoom || d3.zoomIdentity
+    let transform = d3.zoomIdentity
+      .translate(zoom.x, zoom.y)
+      .scale(zoom.k)
+    d3.zoom().transform(this.boxRoot, transform)
+
     this.refreshStructure()
     this.refreshAllBoxes()
   }
