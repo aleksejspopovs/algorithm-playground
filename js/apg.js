@@ -22,20 +22,11 @@ export class APG {
       }
     }
 
-    let getProgram = () => {
-      return this._program
-    }
-
-    let modifyProgram = (f) => {
-      f(this._program)
-      this.saveProgramToLocalStorage()
-    }
-
     let programRoot = this.root.append('div')
-    this.programView = new ProgramView(programRoot, getProgram, modifyProgram)
+    this.programView = new ProgramView(programRoot, this)
 
     let boxListRoot = this.root.append('div')
-    this.boxList = new BoxList(boxListRoot, getProgram, modifyProgram)
+    this.boxList = new BoxList(boxListRoot, this)
 
     let toolbarRoot = this.root.append('div')
     this.toolbar = new Toolbar(toolbarRoot, this)
@@ -66,6 +57,15 @@ export class APG {
 
   flashWireActivity (id) {
     this.programView.flashWireActivity(id)
+  }
+
+  getProgram () {
+    return this._program
+  }
+
+  modifyProgram (f) {
+    f(this._program)
+    this.saveProgramToLocalStorage()
   }
 
   setProgram (program) {

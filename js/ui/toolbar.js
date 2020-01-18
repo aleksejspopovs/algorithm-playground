@@ -50,7 +50,7 @@ export class Toolbar {
   }
 
   saveFile () {
-    let data = new Blob([this.apg._program.save()], {type: 'text/plain'})
+    let data = new Blob([this.apg.getProgram().save()], {type: 'text/plain'})
 
     if (this.saveFileURL !== null) {
       window.URL.revokeObjectURL(this.saveFileURL)

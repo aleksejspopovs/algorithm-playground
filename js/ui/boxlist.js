@@ -1,10 +1,9 @@
 import {BoxCategories} from '../boxes/index.js'
 
 export class BoxList {
-  constructor (root, getProgram, modifyProgram) {
+  constructor (root, apg) {
     this.root = root
-    this.addBox = getProgram
-    this.modifyProgram = modifyProgram
+    this.apg = apg
 
     this.root.classed('A-toolbox', true)
     this.root.append('ul')
@@ -33,7 +32,7 @@ export class BoxList {
         .on('click', (box) => {
           this.setVisibility(false)
           // TODO: make this stick to the pointer until placed, or something
-          this.modifyProgram(program => {
+          this.apg.modifyProgram(program => {
             program.addBox(new box(), null, d3.event.x, d3.event.y)
           })
         })

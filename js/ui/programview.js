@@ -1,17 +1,16 @@
 export class ProgramView {
-  constructor (root, getProgram, modifyProgram) {
+  constructor (root, apg) {
     this.boxRoot = root.append('div').classed('A-program', true)
     this.wireRoot = root.append('svg').classed('A-wires', true)
 
     // programEpoch is a counter, incremented each time we load a
     // new program.
     this.programEpoch = 0
-    this.getProgram = getProgram
-    this.modifyProgram = modifyProgram
+    this.apg = apg
 
     let zoom = d3.zoom()
       .on('zoom', () => this.refreshStructure())
-      .on('end', () => this.modifyProgram((program) => {
+      .on('end', () => this.apg.modifyProgram((program) => {
         program._viewParams = this.getParams()
       }))
       .filter(() => {
@@ -52,7 +51,7 @@ export class ProgramView {
 
   newProgramLoaded () {
     this.programEpoch++
-    let savedZoom = this.getProgram()._viewParams.zoom
+    let savedZoom = this.apg.getProgram()._viewParams.zoom
     if (savedZoom !== undefined) {
       let transform = d3.zoomIdentity
         .translate(savedZoom.x, savedZoom.y)
@@ -71,7 +70,7 @@ export class ProgramView {
       let otherSide = (side === 'src') ? 'dest' : 'src'
       if (this._pendingWire[otherSide + 'Box'] !== undefined) {
         let {srcBox, srcPlug, destBox, destPlug} = this._pendingWire
-        this.modifyProgram(program => program.addWire(srcBox, srcPlug, destBox, destPlug))
+        this.apg.modifyProgram(program => program.addWire(srcBox, srcPlug, destBox, destPlug))
         this._pendingWire = {}
       }
       this.refreshStructure()
@@ -88,7 +87,7 @@ export class ProgramView {
     this.boxRoot
       .selectAll('div.A-box')
       .data(
-        Array.from(this.getProgram()._boxes.keys()),
+        Array.from(this.apg.getProgram()._boxes.keys()),
         // this needs to be a regular function because `this`
         // works differently for lambdas
         function (d) {
@@ -123,7 +122,7 @@ export class ProgramView {
           node.append('ul')
                 .classed('A-input-plugs-list', true)
               .selectAll('li')
-              .data(d => this.getProgram().getBox(d)._inputOrder.map(p => [d, p]))
+              .data(d => this.apg.getProgram().getBox(d)._inputOrder.map(p => [d, p]))
               .join('li')
                 .classed('A-plug A-input-plug', true)
                 .attr('id', ([d, p]) => `A-plug-${d}-input-${p}`)
@@ -138,7 +137,7 @@ export class ProgramView {
               .on('click', (boxId) => {
                 if (d3.event.altKey) {
                   // delete box
-                  this.modifyProgram(program => program.deleteBox(boxId))
+                  this.apg.modifyProgram(program => program.deleteBox(boxId))
                 }
               })
               .call(d3.drag()
@@ -146,13 +145,13 @@ export class ProgramView {
                   let box = d3.event.subject
                   let {movementX, movementY} = d3.event.sourceEvent
                   let zoom = d3.zoomTransform(this.boxRoot.node())
-                  this.getProgram()._boxes.get(box).x += movementX / zoom.k
-                  this.getProgram()._boxes.get(box).y += movementY / zoom.k
+                  this.apg.getProgram()._boxes.get(box).x += movementX / zoom.k
+                  this.apg.getProgram()._boxes.get(box).y += movementY / zoom.k
                   this.refreshStructure()
                 })
                 .on('end', () => {
                   // just to make sure the program is saved
-                  this.modifyProgram((program) => {})
+                  this.apg.modifyProgram((program) => {})
                 })
               )
           // error display
@@ -167,7 +166,7 @@ export class ProgramView {
                 // we have to use this .select trick instead of just calling
                 // .append since that doesn't deal well with a return value of
                 // null or undefined.
-                let layout = self.getProgram().getBox(d).createLayout()
+                let layout = self.apg.getProgram().getBox(d).createLayout()
                 if (layout) {
                   return this.appendChild(layout)
                 }
@@ -178,7 +177,7 @@ export class ProgramView {
           node.append('ul')
                 .classed('A-output-plugs-list', true)
               .selectAll('li')
-              .data(d => this.getProgram().getBox(d)._outputOrder.map(p => [d, p]))
+              .data(d => this.apg.getProgram().getBox(d)._outputOrder.map(p => [d, p]))
               .join('li')
                 .classed('A-plug A-output-plug', true)
                 .attr('id', ([d, p]) => `A-plug-${d}-output-${p}`)
@@ -188,8 +187,8 @@ export class ProgramView {
           return node
         }
       )
-        .style('left', d => `${this.getProgram()._boxes.get(d).x * zoom.k + zoom.x}px`)
-        .style('top', d => `${this.getProgram()._boxes.get(d).y * zoom.k + zoom.y}px`)
+        .style('left', d => `${this.apg.getProgram()._boxes.get(d).x * zoom.k + zoom.x}px`)
+        .style('top', d => `${this.apg.getProgram()._boxes.get(d).y * zoom.k + zoom.y}px`)
         .style('transform', d => `scale(${zoom.k})`)
 
     // highlight the endpoint of the current pending wire (if any)
@@ -209,7 +208,7 @@ export class ProgramView {
 
     // helper function for drawing wires between plugs
     let locatePlug = (wireName, end, coord) => {
-      let wire = this.getProgram()._wires.get(wireName)
+      let wire = this.apg.getProgram()._wires.get(wireName)
       let boxName = wire[`${end}Box`]
       let plugName = wire[`${end}Plug`]
       let io = (end === 'src') ? 'output' : 'input'
@@ -222,7 +221,7 @@ export class ProgramView {
         .attr('width', window.innerWidth)
         .attr('height', window.innerHeight)
       .selectAll('path')
-      .data(Array.from(this.getProgram()._wires.keys()))
+      .data(Array.from(this.apg.getProgram()._wires.keys()))
       .join('path')
         .attr('id', d => `A-wire-${d}`)
         .attr('d', (d) => {
@@ -236,7 +235,7 @@ export class ProgramView {
         .on('click', (wireId) => {
           if (d3.event.altKey) {
             // delete wire
-            this.modifyProgram(program => program.deleteWire(wireId))
+            this.apg.modifyProgram(program => program.deleteWire(wireId))
           }
         })
   }
@@ -255,7 +254,7 @@ export class ProgramView {
   }
 
   refreshBox (id) {
-    let box = this.getProgram().getBox(id)
+    let box = this.apg.getProgram().getBox(id)
     let node = this.getNodeForBox(id)
     if (node) {
       box.render(node)
@@ -263,7 +262,7 @@ export class ProgramView {
   }
 
   refreshAllBoxes () {
-    this.getProgram()._boxes.forEach((_, id) => this.refreshBox(id))
+    this.apg.getProgram()._boxes.forEach((_, id) => this.refreshBox(id))
   }
 
   startBoxProcessing (boxId) {
