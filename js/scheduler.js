@@ -1,6 +1,8 @@
 import {assert} from './utils/assert.js'
 
 const MaxUiDelayMs = 100
+const ProcessingTooLongWarnMs = 100
+const ProcessingTooLongErrorMs = 1000
 
 export var TaskState = {
   NotStarted: 'not_started',
@@ -108,6 +110,7 @@ export class Scheduler {
 
     this.running = true
 
+
     while (this.currentActiveBox !== null) {
       if ((new Date()).getTime() - this.lastUiUpdate > MaxUiDelayMs) {
         // it's been too long since we last let the browser update
@@ -175,6 +178,8 @@ export class Scheduler {
         this.popActiveTask(boxId, error)
       }
 
+      let timeStart = (new Date).getTime()
+
       switch (box.activeTask.state) {
         case TaskState.NotStarted:
           let task = box.tasks.peek()
@@ -227,7 +232,23 @@ export class Scheduler {
           assert(false, `unexpected task state ${box.activeTask.state}`)
         break;
       }
+
+      let timePassed = (new Date()).getTime() - timeStart
+      if (timePassed > ProcessingTooLongErrorMs) {
+        console.error(
+          `box ${boxId} ran for ${timePassed} ms. `
+          + `use yieldControl to pause execution to make sure the UI stays responsive, `
+          + `aiming for at most ${ProcessingTooLongWarnMs} ms between pauses.`
+        )
+      } else if (timePassed > ProcessingTooLongWarnMs) {
+        console.warn(
+          `box ${boxId} ran for ${timePassed} ms. `
+          + `use yieldControl to pause execution to make sure the UI stays responsive, `
+          + `aiming for at most ${ProcessingTooLongWarnMs} ms between pauses.`
+        )
+      }
     }
+
 
     this.performDeferredUiUpdates()
     this.running = false
