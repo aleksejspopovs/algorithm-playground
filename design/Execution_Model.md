@@ -33,7 +33,7 @@ At any given moment in time, a box is either in **processing mode** or not. Chan
 - calls to an input plug's update handler,
 - calls to a callback scheduled with `this.scheduleProcessing`.
 
-TKTK For now, we assume that any processing requires a rerender afterwards.
+TODO For now, we assume that any processing requires a rerender afterwards.
 
 The box will not be in processing mode during rendering, or when DOM events or timers fire (so if any processing needs to be performed in response to those, the box must use `this.scheduleProcessing`).
 
