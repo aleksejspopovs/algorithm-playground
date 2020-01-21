@@ -197,7 +197,6 @@ export class APGProgram {
 
   scheduleProcessing (boxId, f) {
     this._scheduler.addTask(boxId, f)
-    this._scheduler.run()
   }
 
   refreshProgramStructure () {

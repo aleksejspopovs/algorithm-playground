@@ -36,6 +36,8 @@ export class Scheduler {
       this.program._boxes.get(box.prevActive).nextActive = boxId
       this.program._boxes.get(box.nextActive).prevActive = boxId
     }
+
+    this.run()
   }
 
   makeBoxInactive (boxId) {
@@ -150,10 +152,6 @@ export class Scheduler {
             // scheduler can schedule it again
             box.activeTask.state = TaskState.Paused
             this.makeBoxActive(boxId)
-            // it's possible that the scheduler ran out of tasks and
-            // terminated while we were waiting for the promise to resolve,
-            // so we need to try running it
-            this.run()
           })
         } else {
           // the task wants to simply yield execution for a little bit
