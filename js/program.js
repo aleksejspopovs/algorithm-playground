@@ -51,10 +51,6 @@ class BoxWithMetadata {
       notifyPause: null
     }
   }
-
-  active () {
-    return (!this.tasks.empty()) && (this.activeTaskState != TaskState.Awaiting)
-  }
 }
 
 export class APGProgram {
@@ -229,6 +225,10 @@ export class APGProgram {
       let {destBox, destPlug} = this._wires.get(wire)
       this.schedulePlugUpdate(destBox, destPlug, value, wire)
     }
+  }
+
+  terminateProcessing () {
+    this._scheduler.terminateAll()
   }
 
   save () {

@@ -33,6 +33,10 @@ export class Toolbar {
         .text('insert box')
         .on('click', () => this.apg.boxList.toggleVisibility())
 
+    this.root.append('button')
+        .text('terminate program')
+        .on('click', () => this.apg.terminateProcessing())
+
     this.root.append('hr')
 
     this.root.append('button').text('help')

@@ -63,6 +63,10 @@ export class APG {
     return this.programView.screenCoordsToProgram(x, y)
   }
 
+  terminateProcessing () {
+    this._program.terminateProcessing()
+  }
+
   getProgram () {
     return this._program
   }
@@ -74,6 +78,7 @@ export class APG {
 
   setProgram (program) {
     if (this._program !== null) {
+      this._program.terminateProcessing()
       this._program.attachToUi(null)
     }
     this._program = program
