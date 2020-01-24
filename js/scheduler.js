@@ -123,7 +123,7 @@ export class Scheduler {
       while (!box.tasks.empty()) {
         switch (box.activeTask.state) {
           case TaskState.NotStarted:
-            this.popActiveTask(boxId, null)
+            this.popActiveTask(boxId, new TerminateTaskException())
           break;
           case TaskState.Awaiting:
             // just switch the task to Paused and let it be terminated
