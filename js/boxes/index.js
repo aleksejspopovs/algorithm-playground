@@ -30,6 +30,9 @@ import {Add, Mul} from './arithmetic.js'
 registerBox(Add)
 registerBox(Mul)
 
+import {SatToThreeSat} from './karp.js'
+registerBox(SatToThreeSat)
+
 function registerBox(box) {
   let meta = box.metadata()
   if (!BoxCategories.has(meta.category)) {
