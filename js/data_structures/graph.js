@@ -1,6 +1,22 @@
 import {generateUnusedKey, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
 import {APGData} from '../data.js'
 
+// makes a string with the property that
+// nodePair(a, b) == nodePair(x, y) iff a == x and b == y.
+// if ordered is false, they will also compare as true if
+// a == y and b == x.
+// (we use these as keys for a Set, where a two-element
+// list wouldn't do since they don't compare equal even if
+// they have the same elements.)
+function nodePair(a, b, ordered) {
+  if (!ordered && (b < a)) {
+    let tmp = a
+    a = b
+    b = tmp
+  }
+  return `${a.length}|${a}|${b.length}|${b}`
+}
+
 export class Node extends APGData {
   constructor (name, x, y) {
     super()
@@ -51,6 +67,9 @@ export class Edge extends APGData {
   }
 }
 
+// Graph is a graph with no parallel edges or self-loops.
+// depending on how you call the constructor, it might or
+// might not be directed.
 export class Graph extends APGData {
   constructor (directed = false) {
     super()
@@ -59,6 +78,7 @@ export class Graph extends APGData {
     this._nodes = new Map()
     this._edges = new Map()
     this._edgesFrom = new Map()
+    this._edgeSet = new Set()
   }
 
   equals (other) {
@@ -68,6 +88,7 @@ export class Graph extends APGData {
       && objectsEqual(this._nodes, other._nodes)
       && objectsEqual(this._edges, other._edges)
       && objectsEqual(this._edgesFrom, other._edgesFrom)
+      && objectsEqual(this._edgeSet, other._edgeSet)
     )
   }
 
@@ -77,6 +98,7 @@ export class Graph extends APGData {
     result._nodes = objectClone(this._nodes)
     result._edges = objectClone(this._edges)
     result._edgesFrom = objectClone(this._edgesFrom)
+    result._edgeSet = objectClone(this._edgeSet)
     return result
   }
 
@@ -84,6 +106,7 @@ export class Graph extends APGData {
     objectFreeze(this._nodes)
     objectFreeze(this._edges)
     objectFreeze(this._edgesFrom)
+    objectFreeze(this._edgeSet)
     Object.freeze(this)
   }
 
@@ -127,6 +150,10 @@ export class Graph extends APGData {
     return this._nodes.keys()
   }
 
+  nodeCount () {
+    return this._nodes.size
+  }
+
   moveNode (name, newX, newY) {
     this._nodes.get(name).x = newX
     this._nodes.get(name).y = newY
@@ -143,6 +170,12 @@ export class Graph extends APGData {
     if (this._edges.has(name)) {
       throw new Error(`edge named ${name} already exists`)
     }
+    if (this._edgeSet.has(nodePair(from, to, this.directed))) {
+      throw new Error(`edge between ${from} and ${to} already exists`)
+    }
+    if (from === to) {
+      throw new Error(`self-loops are not allowed`)
+    }
 
     let edge = new Edge(name, from, to)
     this._edges.set(name, edge)
@@ -150,6 +183,7 @@ export class Graph extends APGData {
     if (!this.directed) {
       this._edgesFrom.get(to).add(name)
     }
+    this._edgeSet.add(nodePair(from, to, this.directed))
 
     return this
   }
@@ -164,6 +198,7 @@ export class Graph extends APGData {
     if (!this.directed) {
       this._edgesFrom.get(edge.to).delete(name)
     }
+    this._edgeSet.delete(nodePair(from, to, this.directed))
 
     this._edges.delete(name)
 
@@ -182,6 +217,10 @@ export class Graph extends APGData {
 
   getEdge (name) {
     return this._edges.get(name)
+  }
+
+  hasEdge (from, to) {
+    return this._edgeSet.has(nodePair(from, to, this.directed))
   }
 
   offset (dx, dy, scale=1.0, nodePrefix='', rot=0.0) {
@@ -205,6 +244,28 @@ export class Graph extends APGData {
       Array.from(this._nodes.keys(), v => this._nodes.get(v)),
       Array.from(this._edges.keys(), e => this.flattenEdge(e))
     ]
+  }
+
+  complemented () {
+    let result = new Graph(this.directed)
+
+    for (let node of this._nodes.values()) {
+      result.addNode(node.name, node.x, node.y)
+    }
+
+    for (let nodeA of this._nodes.keys()) {
+      for (let nodeB of this._nodes.keys()) {
+        if (
+          (nodeA !== nodeB)
+          && !this.hasEdge(nodeA, nodeB)
+          && !result.hasEdge(nodeA, nodeB)
+        ) {
+          result.addEdge(null, nodeA, nodeB)
+        }
+      }
+    }
+
+    return result
   }
 }
 
