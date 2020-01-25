@@ -198,7 +198,7 @@ export class Graph extends APGData {
     if (!this.directed) {
       this._edgesFrom.get(edge.to).delete(name)
     }
-    this._edgeSet.delete(nodePair(from, to, this.directed))
+    this._edgeSet.delete(nodePair(edge.from, edge.to, this.directed))
 
     this._edges.delete(name)
 
