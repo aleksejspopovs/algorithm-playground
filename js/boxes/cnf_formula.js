@@ -1,17 +1,17 @@
 import {APGBox} from '../box.js'
-import * as DS from '../data_structures/formula.js'
+import * as DS from '../data_structures/cnf_formula.js'
 
-export class Formula extends APGBox {
+export class CNFFormula extends APGBox {
   constructor () {
     super()
     this.newInputPlug('formula', this.replaceFormula)
     this.newOutputPlug('formula')
-    this.state = {formula: new DS.Formula3CNF([], [])}
+    this.state = {formula: new DS.CNFFormula([], [])}
     this.scheduleProcessing(() => this.output.formula.write(this.state.formula))
   }
 
   static metadata () {
-    return {category: 'formula', name: 'formula'}
+    return {category: 'cnf_formula', name: 'cnf_formula'}
   }
 
   replaceFormula () {
@@ -27,7 +27,7 @@ export class Formula extends APGBox {
     textarea.addEventListener('input', (e) => {
       let formulaText = e.target.value
       try {
-        var newFormula = DS.Formula3CNF.parse(formulaText)
+        var newFormula = DS.CNFFormula.parse(formulaText)
       } catch (e) {
         errorDisplay.innerText = `error: ${e}`
         return

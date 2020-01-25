@@ -16,11 +16,11 @@ import {Graph, ExampleGraph} from './graph.js'
 registerBox(Graph)
 registerBox(ExampleGraph)
 
-import {Formula} from './formula.js'
-registerBox(Formula)
+import {CNFFormula} from './cnf_formula.js'
+registerBox(CNFFormula)
 
-import {ThreeSatToDomSet} from './threesat_to_domset.js'
-registerBox(ThreeSatToDomSet)
+import {SatToDomSet} from './sat_to_domset.js'
+registerBox(SatToDomSet)
 
 import {SlowComputation, AwaitCounter} from './debug.js'
 registerBox(SlowComputation)

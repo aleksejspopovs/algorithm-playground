@@ -5,7 +5,7 @@ let cos = Math.cos
 let sin = Math.sin
 const PI = Math.PI
 
-export class ThreeSatToDomSet extends APGBox {
+export class SatToDomSet extends APGBox {
   constructor () {
     super()
     this.newInputPlug('formula', this.compute)
@@ -14,7 +14,7 @@ export class ThreeSatToDomSet extends APGBox {
   }
 
   static metadata () {
-    return {category: 'reductions', name: 'threesat_domset'}
+    return {category: 'reductions', name: 'sat_domset'}
   }
 
   compute () {

@@ -25,17 +25,14 @@ export class Variable extends APGData {
   }
 
   static compare (varA, varB) {
-    // this compares lexicographically by subscript *first*,
-    // which is what we'll want to alternate x_1, y_1, x_2, ...
-    if (varA.subscript < varB.subscript)
+    // this compares lexicographically by base then subscript
+    if (varA.base < varB.base) {
       return -1
-    else if (varA.subscript == varB.subscript) {
-      if (varA.base < varB.base)
-        return -1
-      else
-        return 0
-    } else
+    } else if (varA.base == varB.base) {
+      return (varA.subscript < varB.subscript) ? -1 : 0
+    } else {
       return 1
+    }
   }
 }
 
@@ -64,9 +61,10 @@ export class Literal extends APGData {
   }
 }
 
-export class Formula3CNF extends APGData {
+export class CNFFormula extends APGData {
   constructor (variables, clauses) {
     super()
+    console.log(variables, clauses)
     this.variables = variables
     this.clauses = clauses
   }
@@ -76,7 +74,7 @@ export class Formula3CNF extends APGData {
   }
 
   clone () {
-    return new Formula3CNF(objectClone(this.variables), objectClone(this.clauses))
+    return new CNFFormula(objectClone(this.variables), objectClone(this.clauses))
   }
 
   freeze () {
@@ -87,6 +85,14 @@ export class Formula3CNF extends APGData {
 
   toString () {
     return this.clauses.map((c) => `(${c.join(' | ')})`).join(' & ')
+  }
+
+  degreeExactly (k) {
+    return this.clauses.every(c => c.length === k)
+  }
+
+  degreeAtMost (k) {
+    return this.clauses.every(c => c.length <= k)
   }
 
   static parse(s) {
@@ -105,8 +111,8 @@ export class Formula3CNF extends APGData {
         throw new Error(`${s} is not a valid clause`)
       }
       let literals = s.slice(1, -1).split('|')
-      if (literals.length !== 3) {
-        throw new Error(`clause ${s} does not have 3 literals`)
+      if (literals.length === 0) {
+        throw new Error(`clause ${s} is empty`)
       }
       return literals.map(parseLiteral)
     }
@@ -114,19 +120,15 @@ export class Formula3CNF extends APGData {
     s = s.replace(/ /g, '')
     let clauses = s.split('&').map(parseClause)
 
-    let variableSet = {}
+    let variableSet = new Set()
     for (let clause of clauses) {
       for (let literal of clause) {
-        // NB: keys are coerced to strings, but values aren't
-        variableSet[literal.variable] = literal.variable;
+        variableSet.add(literal.variable)
       }
     }
 
-    let variables = Object.values(variableSet).sort(Variable.compare)
+    let variables = Array.from(variableSet.values()).sort(Variable.compare)
 
-    // TODO: might want to also create any missing variables with subscripts
-    // between the existing ones
-
-    return new Formula3CNF(variables, clauses)
+    return new CNFFormula(variables, clauses)
   }
 }
