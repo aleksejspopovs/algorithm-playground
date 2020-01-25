@@ -3,6 +3,7 @@ import {APGBox} from '../box.js'
 export class Spinner extends APGBox {
   constructor () {
     super()
+    this.newInputPlug('value', this.replaceValue)
     this.newOutputPlug('value')
     this.state = {value: 0}
     this.scheduleProcessing(() => this.output.value.write(0))
@@ -10,6 +11,11 @@ export class Spinner extends APGBox {
 
   static metadata () {
     return {category: 'primitive_io', name: 'spinner'}
+  }
+
+  replaceValue () {
+    let newValue = this.input.value.read()
+    this.state.value = (newValue === null) ? 0 : newValue
   }
 
   createLayout () {
