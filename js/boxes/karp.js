@@ -68,7 +68,6 @@ export class SatToThreeSat extends APGBox {
   }
 }
 
-
 export class SatToClique extends APGBox {
   constructor () {
     super()
@@ -133,5 +132,33 @@ export class SatToClique extends APGBox {
 
     this.output.graph.write(graph)
     this.output.cliqueSize.write(formula.clauses.length)
+  }
+}
+
+export class CliqueToNodeCover extends APGBox {
+  constructor () {
+    super()
+    this.newInputPlug('graph', this.compute)
+    this.newInputPlug('cliqueSize', this.compute)
+    this.newOutputPlug('graph')
+    this.newOutputPlug('coverSize')
+  }
+
+  static metadata () {
+    return {category: 'karp', name: 'clique_nodecover'}
+  }
+
+  compute () {
+    let graph = this.input.graph.read()
+    let cliqueSize = this.input.cliqueSize.read()
+
+    if ((graph === null) || (cliqueSize === null)) {
+      this.output.graph.write(null)
+      this.output.coverSize.write(null)
+      return
+    }
+
+    this.output.graph.write(graph.complemented())
+    this.output.coverSize.write(graph.nodeCount() - cliqueSize)
   }
 }
