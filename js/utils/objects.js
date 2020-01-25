@@ -20,6 +20,13 @@ function iteratorsEqual(left, right) {
   }
 }
 
+export function* enumerate(iterator, start=0) {
+  let i = 0
+  for (let item of iterator) {
+    yield [i++, item]
+  }
+}
+
 export function objectsEqual(left, right) {
   // TODO: does this work for String, Boolean, Number objects?
   // TODO: fast path for when (left === right)? not sure if that ever comes up

@@ -1,6 +1,7 @@
 import {APGBox} from '../box.js'
 import {Variable, Literal, CNFFormula} from '../data_structures/cnf_formula.js'
-import {objectClone} from '../utils/objects.js'
+import {Graph} from '../data_structures/graph.js'
+import {objectClone, enumerate} from '../utils/objects.js'
 
 export class SatToThreeSat extends APGBox {
   constructor () {
@@ -64,5 +65,73 @@ export class SatToThreeSat extends APGBox {
     }
 
     this.output.formula.write(new CNFFormula(newVariables, newClauses))
+  }
+}
+
+
+export class SatToClique extends APGBox {
+  constructor () {
+    super()
+    this.newInputPlug('formula', this.compute)
+    this.newOutputPlug('graph')
+    this.newOutputPlug('cliqueSize')
+  }
+
+  static metadata () {
+    return {category: 'karp', name: 'sat_clique'}
+  }
+
+  compute () {
+    const original = this.input.formula.read()
+    let formula = original.simplified()
+
+    if (formula === null) {
+      this.output.graph.write(null)
+      this.output.cliqueSize.write(null)
+      return
+    }
+
+    let graph = new Graph()
+
+    // number variables with natural numbers
+    let variablesNumbered = new Map()
+    for (let [i, v] of enumerate(formula.variables)) {
+      variablesNumbered.set(v.toString(), i)
+    }
+
+    for (let [i, clause] of enumerate(formula.clauses)) {
+      for (let [j, literal] of enumerate(clause)) {
+        let x = variablesNumbered.get(literal.variable.toString()) * 30
+        let y = i * 30
+        // literals inside a clause are uniquely identified by their
+        // variable names (since the formula is simplified)
+        graph.addNode(`cl_${i}_${literal.variable}`, x, y)
+      }
+    }
+
+    for (let [i, clauseA] of enumerate(formula.clauses)) {
+      for (let j = 0; j < i; j++) {
+        let clauseB = formula.clauses[j]
+
+        for (let literalA of clauseA) {
+          for (let literalB of clauseB) {
+            // if literals are compatible, connect their nodes
+            if (
+              (!literalA.variable.equals(literalB.variable))
+              || (literalA.valency === literalB.valency)
+            ) {
+              graph.addEdge(
+                null,
+                `cl_${i}_${literalA.variable}`,
+                `cl_${j}_${literalB.variable}`
+              )
+            }
+          }
+        }
+      }
+    }
+
+    this.output.graph.write(graph)
+    this.output.cliqueSize.write(formula.clauses.length)
   }
 }

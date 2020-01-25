@@ -94,6 +94,37 @@ export class CNFFormula extends APGData {
     return this.clauses.every(c => c.length <= k)
   }
 
+  simplified () {
+    // returns a copy of the formula, guaranteed to not contain
+    // variable repetitions inside a clause (like (x_1 | x_1) or
+    // (x_1 | !x_1))
+    let newClauses = []
+
+    for (let clause of this.clauses) {
+      let variablesSeen = new Map()
+      let simplifiedClause = []
+      let clauseIsTrivial = false
+      for (let literal of clause) {
+        let v = literal.variable.toString()
+        if (variablesSeen.has(v)) {
+          if (variablesSeen.get(v) !== literal.valency) {
+            clauseIsTrivial = true
+            break
+          }
+        } else {
+          variablesSeen.set(v, literal.valency)
+          simplifiedClause.push(literal.clone())
+        }
+      }
+
+      if (!clauseIsTrivial) {
+        newClauses.push(simplifiedClause)
+      }
+    }
+
+    return new CNFFormula(objectClone(this.variables), newClauses)
+  }
+
   static parse(s) {
     function parseLiteral(s) {
       let match = s.match(/^(!?)([a-z]+)_(\d+)$/)
