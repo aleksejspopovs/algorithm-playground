@@ -123,8 +123,9 @@ export class Graph extends APGBox {
               d3.select(d3.event.target).classed('Graph-moving', true)
             } else {
               if (newEdgeFrom !== d.name) {
+                let newEdge = [newEdgeFrom, d.name]
                 this.scheduleProcessing(() => {
-                  this.state.graph.addEdge(null, newEdgeFrom, d.name)
+                  this.state.graph.addEdge(null, newEdge[0], newEdge[1])
                   this.output.graph.write(this.state.graph)
                 })
               }
