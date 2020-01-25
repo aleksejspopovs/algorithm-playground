@@ -117,6 +117,11 @@ export class CNFFormula extends APGData {
     }
 
     s = s.replace(/ /g, '')
+
+    if (s === '') {
+      return new CNFFormula([], [])
+    }
+
     let clauses = s.split('&').map(parseClause)
 
     let variableSet = new Set()
