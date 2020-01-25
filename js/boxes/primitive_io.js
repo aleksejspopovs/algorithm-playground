@@ -16,6 +16,7 @@ export class Spinner extends APGBox {
   replaceValue () {
     let newValue = this.input.value.read()
     this.state.value = (newValue === null) ? 0 : newValue
+    this.output.value.write(this.state.value)
   }
 
   createLayout () {
