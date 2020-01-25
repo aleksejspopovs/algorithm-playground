@@ -180,6 +180,6 @@ export class Graph extends APGBox {
           })
         )
 
-    let ghost = d3.select('.Graph-ghost-node').raise()
+    let ghost = svg.select('.Graph-ghost-node').raise()
   }
 }
