@@ -57,6 +57,18 @@ export class Graph extends APGBox {
         .classed('Graph-graph', true)
         .classed('Graph-ghost-node', true)
         .style('visibility', 'hidden')
+
+    d3svg.append('defs')
+      .append('marker')
+        .attr('id', 'arrow-end')
+        .attr('markerUnits', 'strokeWidth')
+        .attr('markerWidth', 10)
+        .attr('markerHeight', 5)
+        .attr('refX', 6)
+        .attr('refY', 0.5)
+        .attr('orient', 'auto')
+      .append('path')
+        .attr('d', 'M1,0.2 L1,0.8 L4,0.5 z')
     return svg
   }
 
