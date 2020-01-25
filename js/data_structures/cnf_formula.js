@@ -124,10 +124,14 @@ export class CNFFormula extends APGData {
 
     let clauses = s.split('&').map(parseClause)
 
-    let variableSet = new Set()
+    // two variable objects that represent the same variable (same base
+    // and subscript) might still not compare as equal because the objects
+    // are different, so we canonicalize them to strings to find just the
+    // distinct variables.
+    let variableSet = new Map()
     for (let clause of clauses) {
       for (let literal of clause) {
-        variableSet.add(literal.variable)
+        variableSet.set(literal.variable.toString(), literal.variable)
       }
     }
 
