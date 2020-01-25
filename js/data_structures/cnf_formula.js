@@ -64,7 +64,6 @@ export class Literal extends APGData {
 export class CNFFormula extends APGData {
   constructor (variables, clauses) {
     super()
-    console.log(variables, clauses)
     this.variables = variables
     this.clauses = clauses
   }
