@@ -102,31 +102,6 @@ export class SatToDomSet extends APGBox {
   }
 
   _computeSetSizeTarget (formula, graph) {
-    // TODO: this is quadratic in the number of variables, and it really
-    // doesn't need to be
-    let target = 0
-    for (let variable of formula.variables) {
-      variable = variable.toString()
-      let trueNodes = 0
-      let falseNodes = 0
-      let alwaysNodes = 0
-      for (let node of graph.nodes()) {
-        if (node.startsWith(`var_${variable}_t_`)) {
-          trueNodes++
-        }
-
-        if (node.startsWith(`var_${variable}_f_`)) {
-          falseNodes++
-        }
-
-        if (node.startsWith(`var_${variable}_a_`)) {
-          alwaysNodes++
-        }
-      }
-
-      target += trueNodes + alwaysNodes
-    }
-
-    return target
+    return formula.variables.length
   }
 }
