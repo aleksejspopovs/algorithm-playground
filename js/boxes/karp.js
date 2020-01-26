@@ -149,7 +149,7 @@ export class CliqueToNodeCover extends APGBox {
   }
 
   compute () {
-    let graph = this.input.graph.read()
+    const graph = this.input.graph.read()
     let cliqueSize = this.input.cliqueSize.read()
 
     if ((graph === null) || (cliqueSize === null)) {
@@ -160,5 +160,95 @@ export class CliqueToNodeCover extends APGBox {
 
     this.output.graph.write(graph.complemented())
     this.output.coverSize.write(graph.nodeCount() - cliqueSize)
+  }
+}
+
+export class NodeCoverToDirHamPath extends APGBox {
+  constructor () {
+    super()
+    this.newInputPlug('graph', this.compute)
+    this.newInputPlug('coverSize', this.compute)
+    this.newOutputPlug('graph')
+  }
+
+  static metadata () {
+    return {category: 'karp', name: 'nodecover_dirhampath'}
+  }
+
+  compute () {
+    let original = this.input.graph.read()
+    let coverSize = this.input.coverSize.read()
+
+    if ((original === null) || (coverSize === null)) {
+      this.output.original.write(null)
+      this.output.coverSize.write(null)
+      return
+    }
+
+    let origBounds = original.boundingBox()
+    let graph = new Graph(true)
+    let processedEdges = new Map()
+
+    for (let nodeName of original.nodes()) {
+      let node = original.getNode(nodeName)
+      let edges = Array.from(
+        original.edgesFrom(nodeName),
+        edgeName => {
+          let edge = original.getEdge(edgeName)
+          let destName = edge.other(nodeName)
+          let dest = original.getNode(destName)
+          let angle = Math.atan2(dest.y - node.y, dest.x - node.x)
+          return {destName, angle}
+        }
+      ).sort((x, y) => x.angle - y.angle)
+      processedEdges.set(nodeName, edges)
+
+      for (let {destName, angle} of edges) {
+        graph.addNode(
+          `n_${nodeName}_${destName}_enter`,
+          (node.x - origBounds.x1) * 2 + 50 * Math.cos(angle - 0.08),
+          (node.y - origBounds.y1) * 2 + 50 * Math.sin(angle - 0.08),
+        )
+        graph.addNode(
+          `n_${nodeName}_${destName}_exit`,
+          (node.x - origBounds.x1) * 2 + 50 * Math.cos(angle + 0.08),
+          (node.y - origBounds.y1) * 2 + 50 * Math.sin(angle + 0.08),
+        )
+      }
+    }
+
+    for (let i = 0; i < coverSize; i++) {
+      graph.addNode(
+        `a_${i}`,
+        origBounds.x1 * 2 + 20 * i,
+        origBounds.y2 * 2 + 20,
+      )
+    }
+
+     for (let nodeName of original.nodes()) {
+      let node = original.getNode(nodeName)
+      let edges = processedEdges.get(nodeName)
+
+      for (let [i, {destName}] of enumerate(edges)) {
+        graph.addEdge(null, `n_${nodeName}_${destName}_enter`, `n_${nodeName}_${destName}_exit`)
+
+        graph.addEdge(null, `n_${nodeName}_${destName}_enter`, `n_${destName}_${nodeName}_enter`)
+        graph.addEdge(null, `n_${nodeName}_${destName}_exit`, `n_${destName}_${nodeName}_exit`)
+
+        if (i !== edges.length - 1) {
+          let nextDestName = edges[i + 1].destName
+          graph.addEdge(null, `n_${nodeName}_${destName}_exit`, `n_${nodeName}_${nextDestName}_enter`)
+        }
+      }
+
+      let firstDest = edges[0].destName
+      let lastDest = edges[edges.length - 1].destName
+      for (let i = 0; i < coverSize; i++) {
+        graph.addEdge(null, `a_${i}`, `n_${nodeName}_${firstDest}_enter`)
+        graph.addEdge(null, `n_${nodeName}_${lastDest}_exit`, `a_${i}`)
+      }
+    }
+
+    this.output.graph.write(graph)
   }
 }

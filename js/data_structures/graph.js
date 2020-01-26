@@ -65,6 +65,16 @@ export class Edge extends APGData {
   freeze (other) {
     Object.freeze(this)
   }
+
+  other (node) {
+    if (node === this.from) {
+      return this.to
+    } else if (node === this.to) {
+      return this.from
+    } else {
+      throw new Error(`${node} is not either of the endpoints of this edge`)
+    }
+  }
 }
 
 // Graph is a graph with no parallel edges or self-loops.
@@ -148,6 +158,13 @@ export class Graph extends APGData {
 
   nodes () {
     return this._nodes.keys()
+  }
+
+  getNode (name) {
+    if (!this._nodes.has(name)) {
+      throw new Error(`node ${name} does not exist`)
+    }
+    return this._nodes.get(name)
   }
 
   nodeCount () {
@@ -266,6 +283,28 @@ export class Graph extends APGData {
     }
 
     return result
+  }
+
+  boundingBox () {
+    if (this._nodes.size === 0) {
+      return {x1: 0, y1: 0, x2: 0, y2: 0}
+    }
+
+    let nodes = this._nodes.values()
+    let firstNode = nodes.next().value
+    let x1 = firstNode.x
+    let x2 = firstNode.x
+    let y1 = firstNode.y
+    let y2 = firstNode.y
+
+    for (let node of nodes) {
+      x1 = Math.min(x1, node.x)
+      y1 = Math.min(y1, node.y)
+      x2 = Math.max(x2, node.x)
+      y2 = Math.max(y2, node.y)
+    }
+
+    return {x1, y1, x2, y2}
   }
 }
 

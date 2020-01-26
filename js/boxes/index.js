@@ -30,10 +30,11 @@ import {Add, Mul} from './arithmetic.js'
 registerBox(Add)
 registerBox(Mul)
 
-import {SatToThreeSat, SatToClique, CliqueToNodeCover} from './karp.js'
+import {SatToThreeSat, SatToClique, CliqueToNodeCover, NodeCoverToDirHamPath} from './karp.js'
 registerBox(SatToThreeSat)
 registerBox(SatToClique)
 registerBox(CliqueToNodeCover)
+registerBox(NodeCoverToDirHamPath)
 
 function registerBox(box) {
   let meta = box.metadata()
