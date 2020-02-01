@@ -18,6 +18,8 @@ export class SatToDomSet extends APGBox {
   }
 
   compute () {
+    /* this reduction is based on the SAT → Node Cover
+       reduction given in [Karp72] (see REFERENCES.md) */
     let formula = this.input.formula.read()
 
     if (formula === null) {

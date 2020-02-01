@@ -14,6 +14,7 @@ export class ThreeSatToThreeColor extends APGBox {
   }
 
   compute () {
+    /* this reduction is given in [GJS76] (see REFERENCES.md) */
     const formula = this.input.formula.read()
 
     if (formula === null) {
@@ -117,6 +118,7 @@ export class ThreeColorPlanarize extends APGBox {
   }
 
   compute () {
+    /* this transformation is given in [GJS76] (see REFERENCES.md) */
     // TODO: repeat until planar
     let graph = this.input.graph.copy()
 

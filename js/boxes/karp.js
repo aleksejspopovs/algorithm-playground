@@ -3,6 +3,9 @@ import {Variable, Literal, CNFFormula} from '../data_structures/cnf_formula.js'
 import {Graph} from '../data_structures/graph.js'
 import {objectClone, enumerate} from '../utils/objects.js'
 
+/* reduction in this file are taken from [Karp72]
+   (see REFERENCES.md) */
+
 export class SatToThreeSat extends APGBox {
   constructor () {
     super()
