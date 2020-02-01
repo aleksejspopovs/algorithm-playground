@@ -36,6 +36,10 @@ registerBox(SatToClique)
 registerBox(CliqueToNodeCover)
 registerBox(NodeCoverToDirHamPath)
 
+import {ThreeSatToThreeColor, ThreeColorPlanarize} from './threesat_to_threecolor.js'
+registerBox(ThreeSatToThreeColor)
+registerBox(ThreeColorPlanarize)
+
 function registerBox(box) {
   let meta = box.metadata()
   if (!BoxCategories.has(meta.category)) {

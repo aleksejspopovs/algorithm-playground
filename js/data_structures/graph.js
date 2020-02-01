@@ -1,4 +1,4 @@
-import {generateUnusedKey, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
+import {enumerate, generateUnusedKey, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
 import {APGData} from '../data.js'
 
 // makes a string with the property that
@@ -73,6 +73,52 @@ export class Edge extends APGData {
       return this.from
     } else {
       throw new Error(`${node} is not either of the endpoints of this edge`)
+    }
+  }
+
+  toLine (graph) {
+    let a = graph.getNode(this.from)
+    let b = graph.getNode(this.to)
+    return [a.x, a.y, b.x - a.x, b.y - a.y]
+  }
+
+  intersect (other, graph) {
+    if (
+      (this.from === other.from)
+      || (this.from === other.to)
+      || (this.to === other.from)
+      || (this.to === other.to)
+    ) {
+      // intersecting vertices
+      return null
+    }
+    // TODO: deal with vertices that are in the same location
+
+    let [aX0, aY0, aDX, aDY] = this.toLine(graph)
+    let [bX0, bY0, bDX, bDY] = other.toLine(graph)
+
+    if (aDX * bDY - aDY * bDX === 0) {
+      // parallel
+      // TODO: handle this differently, or provide a way to avoid this
+      // TODO: deal with overlapping parallel edges somehow
+      return null
+    }
+
+    let timeA = (bDY * (bX0 - aX0) - bDX * (bY0 - aY0)) / (aDX * bDY - aDY * bDX)
+    if ((timeA < 0) || (timeA > 1)) {
+      return null
+    }
+
+    let timeB = (aDY * (aX0 - bX0) - aDX * (aY0 - bY0)) / (bDX * aDY - bDY * aDX)
+    if ((timeB < 0) || (timeB > 1)) {
+      return null
+    }
+
+    return {
+      timeA,
+      timeB,
+      x: aX0 + timeA * aDX,
+      y: aY0 + timeA * aDY,
     }
   }
 }
@@ -158,6 +204,10 @@ export class Graph extends APGData {
 
   nodes () {
     return this._nodes.keys()
+  }
+
+  hasNode (name) {
+    return this._nodes.has(name)
   }
 
   getNode (name) {
@@ -317,6 +367,24 @@ export class Graph extends APGData {
     }
 
     return {x1, y1, x2, y2}
+  }
+
+  computeEdgeIntersections () {
+    // TODO: performance
+    let result = []
+    for (let [i, edgeNameA] of enumerate(this.edges())) {
+      for (let [j, edgeNameB] of enumerate(this.edges())) {
+        if (j >= i) {
+          break
+        }
+
+        let intersection = this.getEdge(edgeNameA).intersect(this.getEdge(edgeNameB), this)
+        if (intersection) {
+          result.push({edgeNameA, edgeNameB, ...intersection})
+        }
+      }
+    }
+    return result
   }
 }
 
