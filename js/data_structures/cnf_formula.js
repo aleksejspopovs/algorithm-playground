@@ -69,7 +69,7 @@ export class CNFFormula extends APGData {
   }
 
   equals (other) {
-    return objectsEqual(this.variables) && objectsEqual(this.clauses)
+    return objectsEqual(this.variables, other.variables) && objectsEqual(this.clauses, other.clauses)
   }
 
   clone () {
