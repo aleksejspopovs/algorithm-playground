@@ -233,10 +233,13 @@ export class Graph extends APGData {
   }
 
   getEdge (name) {
+    if (!this._edges.has(name)) {
+      throw new Error(`edge ${name} does not exist`)
+    }
     return this._edges.get(name)
   }
 
-  hasEdge (from, to) {
+  hasEdgeBetween (from, to) {
     return this._edgeSet.has(nodePair(from, to, this.directed))
   }
 
@@ -274,8 +277,8 @@ export class Graph extends APGData {
       for (let nodeB of this._nodes.keys()) {
         if (
           (nodeA !== nodeB)
-          && !this.hasEdge(nodeA, nodeB)
-          && !result.hasEdge(nodeA, nodeB)
+          && !this.hasEdgeBetween(nodeA, nodeB)
+          && !result.hasEdgeBetween(nodeA, nodeB)
         ) {
           result.addEdge(null, nodeA, nodeB)
         }
