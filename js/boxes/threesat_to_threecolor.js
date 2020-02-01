@@ -37,9 +37,9 @@ export class ThreeSatToThreeColor extends APGBox {
     let varAngle = 2 * Math.PI / ((formula.variables.length + 1) * 2)
     graph.addNode('t', tfRadius * Math.cos(0), tfRadius * Math.sin(0))
          .addNode('f', tfRadius * Math.cos(varAngle), tfRadius * Math.sin(varAngle))
-         .addEdge(null, 'dc', 't')
-         .addEdge(null, 'dc', 'f')
-         .addEdge(null, 't', 'f')
+         .addEdge('dc', 't')
+         .addEdge('dc', 'f')
+         .addEdge('t', 'f')
 
     for (let [i, v] of enumerate(formula.variables)) {
       graph.addNode(
@@ -50,9 +50,9 @@ export class ThreeSatToThreeColor extends APGBox {
         `neg_${v}`,
         varRadius * Math.cos((2 + 2 * i + 1) * varAngle),
         varRadius * Math.sin((2 + 2 * i + 1) * varAngle),
-      ).addEdge(null, `pos_${v}`, `neg_${v}`)
-       .addEdge(null, 'dc', `pos_${v}`)
-       .addEdge(null, 'dc', `neg_${v}`)
+      ).addEdge(`pos_${v}`, `neg_${v}`)
+       .addEdge('dc', `pos_${v}`)
+       .addEdge('dc', `neg_${v}`)
     }
 
     if (formula.clauses.length === 0) {
@@ -74,11 +74,11 @@ export class ThreeSatToThreeColor extends APGBox {
         `cl_${i}_inner`,
         clauseOuterRadius * Math.cos((4 * i + 1/2) * clauseAngle),
         clauseOuterRadius * Math.sin((4 * i + 1/2) * clauseAngle),
-      ).addEdge(null, `cl_${i}_innerL`, `cl_${i}_innerR`)
-       .addEdge(null, `cl_${i}_innerL`, `cl_${i}_inner`)
-       .addEdge(null, `cl_${i}_innerR`, `cl_${i}_inner`)
-       .addEdge(null, `cl_${i}_innerL`, (clause[0].valency ? 'pos' : 'neg') + '_' + clause[0].variable)
-       .addEdge(null, `cl_${i}_innerR`, (clause[1].valency ? 'pos' : 'neg') + '_' + clause[1].variable)
+      ).addEdge(`cl_${i}_innerL`, `cl_${i}_innerR`)
+       .addEdge(`cl_${i}_innerL`, `cl_${i}_inner`)
+       .addEdge(`cl_${i}_innerR`, `cl_${i}_inner`)
+       .addEdge(`cl_${i}_innerL`, (clause[0].valency ? 'pos' : 'neg') + '_' + clause[0].variable)
+       .addEdge(`cl_${i}_innerR`, (clause[1].valency ? 'pos' : 'neg') + '_' + clause[1].variable)
 
       graph.addNode(
         `cl_${i}_outerL`,
@@ -92,13 +92,13 @@ export class ThreeSatToThreeColor extends APGBox {
         `cl_${i}_outer`,
         clauseInnerRadius * Math.cos((4 * i + 2) * clauseAngle),
         clauseInnerRadius * Math.sin((4 * i + 2) * clauseAngle),
-      ).addEdge(null, `cl_${i}_outerL`, `cl_${i}_outerR`)
-       .addEdge(null, `cl_${i}_outerL`, `cl_${i}_outer`)
-       .addEdge(null, `cl_${i}_outerR`, `cl_${i}_outer`)
-       .addEdge(null, `cl_${i}_outerL`, `cl_${i}_inner`)
-       .addEdge(null, `cl_${i}_outerR`, (clause[2].valency ? 'pos' : 'neg') + '_' + clause[2].variable)
-       .addEdge(null, `cl_${i}_outer`, 'f')
-       .addEdge(null, `cl_${i}_outer`, 'dc')
+      ).addEdge(`cl_${i}_outerL`, `cl_${i}_outerR`)
+       .addEdge(`cl_${i}_outerL`, `cl_${i}_outer`)
+       .addEdge(`cl_${i}_outerR`, `cl_${i}_outer`)
+       .addEdge(`cl_${i}_outerL`, `cl_${i}_inner`)
+       .addEdge(`cl_${i}_outerR`, (clause[2].valency ? 'pos' : 'neg') + '_' + clause[2].variable)
+       .addEdge(`cl_${i}_outer`, 'f')
+       .addEdge(`cl_${i}_outer`, 'dc')
     }
 
     this.output.graph.write(graph)

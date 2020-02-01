@@ -11,8 +11,8 @@ export class ExampleGraph extends APGBox {
        .addNode('tr', 100, 0)
        .addNode('bl', 0, 100)
        .addNode('br', 100, 100)
-       .addEdge(null, 'tl', 'br')
-       .addEdge(null, 'tr', 'bl')
+       .addEdge('tl', 'br')
+       .addEdge('tr', 'bl')
       this.output.graph.write(g)
     })
   }
@@ -162,7 +162,7 @@ export class Graph extends APGBox {
               if (newEdgeFrom !== d.name) {
                 let newEdge = [newEdgeFrom, d.name]
                 this.scheduleProcessing(() => {
-                  this.state.graph.addEdge(null, newEdge[0], newEdge[1])
+                  this.state.graph.addEdge(newEdge[0], newEdge[1])
                   this.output.graph.write(this.state.graph)
                 })
               }

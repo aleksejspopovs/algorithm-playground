@@ -96,9 +96,9 @@ export class SatToDomSet extends APGBox {
     graph.addNode('dc', cos(initialAngle), sin(initialAngle))
       .addNode('t_0', cos(initialAngle + third), sin(initialAngle + third))
       .addNode('f_0', cos(initialAngle + 2 * third), sin(initialAngle + 2 * third))
-      .addEdge(null, 't_0', 'f_0')
-      .addEdge(null, 'f_0', 'dc')
-      .addEdge(null, 'dc', 't_0')
+      .addEdge('t_0', 'f_0')
+      .addEdge('f_0', 'dc')
+      .addEdge('dc', 't_0')
   }
 
   _computeSetSizeTarget (formula, graph) {

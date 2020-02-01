@@ -339,7 +339,7 @@ export class Graph extends APGData {
           && !this.hasEdgeBetween(nodeA, nodeB)
           && !result.hasEdgeBetween(nodeA, nodeB)
         ) {
-          result.addEdge(null, nodeA, nodeB)
+          result.addEdge(nodeA, nodeB)
         }
       }
     }

@@ -229,22 +229,22 @@ export class NodeCoverToDirHamPath extends APGBox {
       let edges = processedEdges.get(nodeName)
 
       for (let [i, {destName}] of enumerate(edges)) {
-        graph.addEdge(null, `n_${nodeName}_${destName}_enter`, `n_${nodeName}_${destName}_exit`)
+        graph.addEdge(`n_${nodeName}_${destName}_enter`, `n_${nodeName}_${destName}_exit`)
 
-        graph.addEdge(null, `n_${nodeName}_${destName}_enter`, `n_${destName}_${nodeName}_enter`)
-        graph.addEdge(null, `n_${nodeName}_${destName}_exit`, `n_${destName}_${nodeName}_exit`)
+        graph.addEdge(`n_${nodeName}_${destName}_enter`, `n_${destName}_${nodeName}_enter`)
+        graph.addEdge(`n_${nodeName}_${destName}_exit`, `n_${destName}_${nodeName}_exit`)
 
         if (i !== edges.length - 1) {
           let nextDestName = edges[i + 1].destName
-          graph.addEdge(null, `n_${nodeName}_${destName}_exit`, `n_${nodeName}_${nextDestName}_enter`)
+          graph.addEdge(`n_${nodeName}_${destName}_exit`, `n_${nodeName}_${nextDestName}_enter`)
         }
       }
 
       let firstDest = edges[0].destName
       let lastDest = edges[edges.length - 1].destName
       for (let i = 0; i < coverSize; i++) {
-        graph.addEdge(null, `a_${i}`, `n_${nodeName}_${firstDest}_enter`)
-        graph.addEdge(null, `n_${nodeName}_${lastDest}_exit`, `a_${i}`)
+        graph.addEdge(`a_${i}`, `n_${nodeName}_${firstDest}_enter`)
+        graph.addEdge(`n_${nodeName}_${lastDest}_exit`, `a_${i}`)
       }
     }
 
