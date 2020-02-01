@@ -178,7 +178,16 @@ export class Graph extends APGData {
     return this
   }
 
-  addEdge (name, from, to) {
+  addEdge (...args) {
+    let name, from, to
+    if (args.length === 2) {
+      [from, to] = args
+    } else if (args.length === 3) {
+      [name, from, to] = args
+    } else {
+      throw new Error('wrong number of parameters to addEdge')
+    }
+
     name = name || generateUnusedKey(this._edges, 'edge')
 
     if (!(this._nodes.has(from) && this._nodes.has(to))) {
