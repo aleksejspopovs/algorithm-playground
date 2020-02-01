@@ -180,8 +180,7 @@ export class NodeCoverToDirHamPath extends APGBox {
     let coverSize = this.input.coverSize.read()
 
     if ((original === null) || (coverSize === null)) {
-      this.output.original.write(null)
-      this.output.coverSize.write(null)
+      this.output.graph.write(null)
       return
     }
 
