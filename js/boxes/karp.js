@@ -205,13 +205,13 @@ export class NodeCoverToDirHamPath extends APGBox {
       for (let {destName, angle} of edges) {
         graph.addNode(
           `n_${nodeName}_${destName}_enter`,
-          (node.x - origBounds.x1) * 2 + 50 * Math.cos(angle - 0.08),
-          (node.y - origBounds.y1) * 2 + 50 * Math.sin(angle - 0.08),
+          (node.x - origBounds.x1) * 10 + 10 * Math.cos(angle - 0.08),
+          (node.y - origBounds.y1) * 10 + 10 * Math.sin(angle - 0.08),
         )
         graph.addNode(
           `n_${nodeName}_${destName}_exit`,
-          (node.x - origBounds.x1) * 2 + 50 * Math.cos(angle + 0.08),
-          (node.y - origBounds.y1) * 2 + 50 * Math.sin(angle + 0.08),
+          (node.x - origBounds.x1) * 10 + 10 * Math.cos(angle + 0.08),
+          (node.y - origBounds.y1) * 10 + 10 * Math.sin(angle + 0.08),
         )
       }
     }
