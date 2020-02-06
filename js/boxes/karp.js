@@ -219,11 +219,12 @@ export class NodeCoverToDirHamPath extends APGBox {
       }
     }
 
+    let stepSize = (coverSize > 1) ? 1 / (coverSize - 1) : 0
     for (let i = 0; i < coverSize; i++) {
       graph.addNode(
         `a_${i}`,
-        origBounds.x1 * 2 + 20 * i,
-        origBounds.y2 * 2 + 20,
+        -100,
+        10 * (origBounds.y2 - origBounds.y1) * i * stepSize
       )
     }
 
