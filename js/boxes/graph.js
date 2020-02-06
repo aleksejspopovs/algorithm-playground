@@ -77,10 +77,10 @@ export class Graph extends APGBox {
       .append('path')
         .attr('d', 'M1,0.2 L1,0.8 L4,0.5 z')
 
-    let button = document.createElement('button')
-    div.appendChild(button)
-    button.innerText = 'fit graph'
-    button.addEventListener('click', () => this.scheduleProcessing(yieldControl => {
+    let fitButton = document.createElement('button')
+    div.appendChild(fitButton)
+    fitButton.innerText = 'fit graph'
+    fitButton.addEventListener('click', () => this.scheduleProcessing(yieldControl => {
       let boundingBox = this.state.graph.boundingBox()
       zoom.translateTo(
         d3svg,
@@ -94,6 +94,13 @@ export class Graph extends APGBox {
         height / (boundingBox.y2 - boundingBox.y1 + 10),
       )
       zoom.scaleTo(d3svg, newScale)
+    }))
+
+    let resetButton = document.createElement('button')
+    div.appendChild(resetButton)
+    resetButton.innerText = 'reset graph'
+    resetButton.addEventListener('click', () => this.scheduleProcessing(yieldControl => {
+      this.replaceGraph()
     }))
 
     return div
