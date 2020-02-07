@@ -15,8 +15,6 @@ export class APGBox {
     this._isProcessing = false
   }
 
-  processMessage (plugName, message) {}
-  processEvent (event) {}
   createLayout () {}
   render (node) {}
 
