@@ -28,7 +28,7 @@ export class ProgramView {
         // ignore mousedown on anything other than the program area
         // (e.g. on particular boxes)
         if (d3.event.target !== this.boxRoot.node()) {
-          return false;
+          return false
         }
 
         return true

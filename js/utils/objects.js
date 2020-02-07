@@ -43,7 +43,7 @@ export function objectsEqual(left, right) {
     if (Array.isArray(left)) {
       return (
         Array.isArray(right)
-        && (left.length == right.length)
+        && (left.length === right.length)
         && (left.every((l, i) => objectsEqual(l, right[i])))
       )
     } else if (left.constructor === Object) {

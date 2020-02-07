@@ -124,7 +124,7 @@ export class Scheduler {
         switch (box.activeTask.state) {
           case TaskState.NotStarted:
             this.popActiveTask(boxId, new TerminateTaskException())
-          break;
+          break
           case TaskState.Awaiting:
             // just switch the task to Paused and let it be terminated
             // like any other Paused task. note that activeTask.terminate()
@@ -145,7 +145,7 @@ export class Scheduler {
             // can at least mark it somehow and never schedule it again?
             // TODO: a timeout
             await box.activeTask.done
-          break;
+          break
           default:
             // we do not expect to see a task that is Executing here,
             // although it is actually possible in the case where a task
@@ -154,7 +154,7 @@ export class Scheduler {
             // we do not expect Awaiting tasks either, because their boxes
             // are not active.
             assert(false, `unexpected task state ${box.activeTask.state} in Scheduler.terminateAll`)
-          break;
+          break
         }
       }
     }
@@ -250,7 +250,7 @@ export class Scheduler {
       let timeStart = (new Date).getTime()
 
       switch (box.activeTask.state) {
-        case TaskState.NotStarted:
+        case TaskState.NotStarted: {
           let task = box.tasks.peek()
           box.activeTask.state = TaskState.Executing
           assert(!box.object._isProcessing)
@@ -277,8 +277,9 @@ export class Scheduler {
             // immediately and carry on.
             await box.activeTask.done
           }
-        break;
-        case TaskState.Paused:
+          break
+        }
+        case TaskState.Paused: {
           box.activeTask.state = TaskState.Executing
           assert(!box.object._isProcessing)
           box.object._isProcessing = true
@@ -295,24 +296,24 @@ export class Scheduler {
 
           // we want to wait until this task either completes or pauses again.
           await Promise.race([box.activeTask.done, box.activeTask.paused])
-        break;
+          break
+        }
         // we do *not* expect to find Awaiting or Executing tasks here
         default:
           assert(false, `unexpected task state ${box.activeTask.state} in Scheduler.run`)
-        break;
       }
 
       let timePassed = (new Date()).getTime() - timeStart
       if (timePassed > ProcessingTooLongErrorMs) {
         console.error(
           `box ${boxId} ran for ${timePassed} ms. `
-          + `use yieldControl to pause execution to make sure the UI stays responsive, `
+          + 'use yieldControl to pause execution to make sure the UI stays responsive, '
           + `aiming for at most ${ProcessingTooLongWarnMs} ms between pauses.`
         )
       } else if (timePassed > ProcessingTooLongWarnMs) {
         console.warn(
           `box ${boxId} ran for ${timePassed} ms. `
-          + `use yieldControl to pause execution to make sure the UI stays responsive, `
+          + 'use yieldControl to pause execution to make sure the UI stays responsive, '
           + `aiming for at most ${ProcessingTooLongWarnMs} ms between pauses.`
         )
       }

@@ -250,7 +250,7 @@ export class Graph extends APGData {
       throw new Error(`edge between ${from} and ${to} already exists`)
     }
     if (from === to) {
-      throw new Error(`self-loops are not allowed`)
+      throw new Error('self-loops are not allowed')
     }
 
     let edge = new Edge(name, from, to)
@@ -414,7 +414,7 @@ class GraphProxy {
   addNode (name, x, y) {
     let [graphX, graphY] = this._coordsToGraph(x, y)
     let fullName = (name === null)
-      ? this._graph.generateNodeName(nodePrefix)
+      ? this._graph.generateNodeName(this._nodePrefix)
       : (this._nodePrefix + name)
     this._graph.addNode(fullName, graphX, graphY)
     this._nodeJustAdded = fullName

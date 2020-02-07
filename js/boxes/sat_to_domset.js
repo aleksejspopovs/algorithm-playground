@@ -48,7 +48,7 @@ export class SatToDomSet extends APGBox {
       )
     }
 
-    let m = formula.clauses.length;
+    let m = formula.clauses.length
     for (let [i, clause] of formula.clauses.entries()) {
       graph.addNode(
         `clause_${i}`,

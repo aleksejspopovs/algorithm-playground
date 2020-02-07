@@ -159,7 +159,7 @@ export class ThreeColorPlanarize extends APGBox {
       }
 
       for (let [j, {x, y}] of enumerate(intersections)) {
-        if (j == i) {
+        if (j === i) {
           continue
         }
         minDistSq = Math.min(minDistSq, distSq(xing.x, xing.y, x, y))

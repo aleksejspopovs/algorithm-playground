@@ -28,7 +28,7 @@ export class Variable extends APGData {
     // this compares lexicographically by base then subscript
     if (varA.base < varB.base) {
       return -1
-    } else if (varA.base == varB.base) {
+    } else if (varA.base === varB.base) {
       return (varA.subscript < varB.subscript) ? -1 : 0
     } else {
       return 1
