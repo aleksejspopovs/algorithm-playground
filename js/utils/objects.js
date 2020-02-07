@@ -21,7 +21,7 @@ function iteratorsEqual(left, right) {
 }
 
 export function* enumerate(iterator, start=0) {
-  let i = 0
+  let i = start
   for (let item of iterator) {
     yield [i++, item]
   }
