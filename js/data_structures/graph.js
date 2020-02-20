@@ -17,6 +17,18 @@ function nodePair(a, b, ordered) {
   return `${a.length}|${a}|${b.length}|${b}`
 }
 
+function parseAddEdgeParams(args) {
+  // args is [from, to] or [name, from, to]
+  // returns [name, from, to]
+  if (args.length === 2) {
+    return [null, ...args]
+  } else if (args.length === 3) {
+    return args
+  } else {
+    throw new Error('wrong number of parameters to addEdge')
+  }
+}
+
 export class Node extends APGData {
   constructor (name, x, y) {
     super()
@@ -229,15 +241,7 @@ export class Graph extends APGData {
   }
 
   addEdge (...args) {
-    let name, from, to
-    if (args.length === 2) {
-      [from, to] = args
-    } else if (args.length === 3) {
-      [name, from, to] = args
-    } else {
-      throw new Error('wrong number of parameters to addEdge')
-    }
-
+    let [name, from, to] = parseAddEdgeParams(args)
     name = name || generateUnusedKey(this._edges, 'edge')
 
     if (!(this._nodes.has(from) && this._nodes.has(to))) {
@@ -421,7 +425,8 @@ class GraphProxy {
     return this
   }
 
-  addEdge (name, from, to) {
+  addEdge (...args) {
+    let [name, from, to] = parseAddEdgeParams(args)
     let fromName = from.startsWith('$') ? from.slice(1) : this._nodePrefix + from
     let toName = to.startsWith('$') ? to.slice(1) : this._nodePrefix + to
     this._graph.addEdge(name, fromName, toName)
