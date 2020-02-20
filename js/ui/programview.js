@@ -151,7 +151,7 @@ export class ProgramView {
                 })
                 .on('end', () => {
                   // just to make sure the program is saved
-                  this.apg.modifyProgram((program) => {})
+                  this.apg.modifyProgram((_program) => {})
                 })
               )
           // error display
@@ -189,7 +189,7 @@ export class ProgramView {
       )
         .style('left', d => `${this.apg.getProgram()._boxes.get(d).x * zoom.k + zoom.x}px`)
         .style('top', d => `${this.apg.getProgram()._boxes.get(d).y * zoom.k + zoom.y}px`)
-        .style('transform', d => `scale(${zoom.k})`)
+        .style('transform', () => `scale(${zoom.k})`)
 
     // highlight the endpoint of the current pending wire (if any)
     this.boxRoot

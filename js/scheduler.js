@@ -132,8 +132,9 @@ export class Scheduler {
             // task after it has terminated.
             box.activeTask.state = TaskState.Paused
             this.makeBoxActive(boxId, false)
-            // intentional fall-through: the code for Paused will now also
-            // execute!
+          // intentional fall-through: the code for Paused will now also
+          // execute!
+          /* eslint-disable no-fallthrough */
           case TaskState.Paused:
             box.activeTask.state = TaskState.Executing
             assert(!box.object._isProcessing)
@@ -265,8 +266,8 @@ export class Scheduler {
           let result = taskAsync(yieldControl)
 
           box.activeTask.done = result.then(
-            (value) => taskFinished(null),
-            (error) => taskFinished(error),
+            () => taskFinished(null),
+            error => taskFinished(error),
           )
 
           if (box.activeTask.state === TaskState.Executing) {

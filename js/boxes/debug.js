@@ -42,16 +42,16 @@ export class AwaitCounter extends APGBox {
     super()
     this.newOutputPlug('counter')
 
-    if (window.apgDebug_promises === undefined) {
-      window.apgDebug_promises = new Map()
+    if (window.apgDebugPromises === undefined) {
+      window.apgDebugPromises = new Map()
     }
 
     this.state = {
-      name: generateUnusedKey(window.apgDebug_promises, 'promise'),
+      name: generateUnusedKey(window.apgDebugPromises, 'promise'),
       counter: 0,
     }
 
-    window.apgDebug_promises.set(this.state.name, null)
+    window.apgDebugPromises.set(this.state.name, null)
   }
 
   static metadata () {
@@ -63,9 +63,9 @@ export class AwaitCounter extends APGBox {
 
     let pre = document.createElement('pre')
     pre.innerText = (
-      `apgDebug_promises.get('${this.state.name}').resolve()\n`
-      + `apgDebug_promises.get('${this.state.name}').resolve(10)\n`
-      + `apgDebug_promises.get('${this.state.name}').reject(new Error('hi'))`
+      `apgDebugPromises.get('${this.state.name}').resolve()\n`
+      + `apgDebugPromises.get('${this.state.name}').resolve(10)\n`
+      + `apgDebugPromises.get('${this.state.name}').reject(new Error('hi'))`
     )
     div.appendChild(pre)
 
@@ -79,13 +79,13 @@ export class AwaitCounter extends APGBox {
 
   async awaitThenIncrement (yieldControl) {
     let promise = new Promise((resolve, reject) => {
-      window.apgDebug_promises.set(this.state.name, {resolve, reject})
+      window.apgDebugPromises.set(this.state.name, {resolve, reject})
     })
 
     try {
       var {data} = await yieldControl(promise)
     } finally {
-      window.apgDebug_promises.set(this.state.name, null)
+      window.apgDebugPromises.set(this.state.name, null)
     }
 
     let increment = (data !== undefined) ? data : 1

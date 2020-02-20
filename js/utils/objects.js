@@ -9,15 +9,15 @@ export function generateUnusedKey(map, prefix) {
 }
 
 function iteratorsEqual(left, right) {
-  while (true) {
-    let leftValue = left.next()
-    let rightValue = right.next()
-    if (leftValue.done) {
-      return rightValue.done
-    } else if (!objectsEqual(leftValue.value, rightValue.value)) {
-      return false
-    }
-  }
+  let leftState, rightState
+  do {
+    leftState = left.next()
+    rightState = right.next()
+  } while (
+    !leftState.done && !rightState.done
+    && objectsEqual(leftState.value, rightState.value)
+  )
+  return leftState.done && rightState.done
 }
 
 export function* enumerate(iterator, start=0) {

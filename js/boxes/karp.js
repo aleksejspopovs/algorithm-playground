@@ -102,7 +102,7 @@ export class SatToClique extends APGBox {
     }
 
     for (let [i, clause] of enumerate(formula.clauses)) {
-      for (let [j, literal] of enumerate(clause)) {
+      for (let literal of clause) {
         let x = variablesNumbered.get(literal.variable.toString()) * 30
         let y = i * 30
         // literals inside a clause are uniquely identified by their
@@ -229,7 +229,6 @@ export class NodeCoverToDirHamPath extends APGBox {
     }
 
      for (let nodeName of original.nodes()) {
-      let node = original.getNode(nodeName)
       let edges = processedEdges.get(nodeName)
 
       for (let [i, {destName}] of enumerate(edges)) {

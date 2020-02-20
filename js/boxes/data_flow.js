@@ -14,7 +14,7 @@ export class Hold extends APGBox {
   createLayout () {
     let button = document.createElement('button')
     button.innerText = 'push'
-    button.addEventListener('click', (e) => {
+    button.addEventListener('click', () => {
       this.scheduleProcessing(() => {
         this.output.value.write(this.input.held.read())
       })

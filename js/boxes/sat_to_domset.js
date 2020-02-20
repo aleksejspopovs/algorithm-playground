@@ -33,7 +33,6 @@ export class SatToDomSet extends APGBox {
 
     let n = formula.variables.length
     for (let [i, variable] of formula.variables.entries()) {
-      let variable = formula.variables[i]
       let alpha = 2 * PI * (i / n)
 
       this._placeVariableGadget(
@@ -83,16 +82,7 @@ export class SatToDomSet extends APGBox {
     }
   }
 
-  _placeVariableGadget (graph, variable) {
-    /* assumptions about this gadget:
-       - the true domset consists of all nodes labeled t_* or a_*
-       - the false domset consists of all nodes labeled f_* or a_*
-       - the true domset and the false domset are both the same
-       size, and there is no domset of the same size that contains both
-       t_0 and f_0
-       - further, these properties also hold if t_0 and/or f_0 are satisfied
-       externally
-    */
+  _placeVariableGadget (graph, _variable) {
     let initialAngle = 0
     let third = 2 * PI / 3
     graph.addNode('dc', cos(initialAngle), sin(initialAngle))
@@ -103,7 +93,7 @@ export class SatToDomSet extends APGBox {
       .addEdge('dc', 't_0')
   }
 
-  _computeSetSizeTarget (formula, graph) {
+  _computeSetSizeTarget (formula, _graph) {
     return formula.variables.length
   }
 }

@@ -108,7 +108,7 @@ export class Graph extends APGBox {
 
   render (node) {
     let svg = d3.select(node).select('svg')
-    let [nodes_data, edges_data] = this.state.graph.flatten()
+    let [nodes, edges] = this.state.graph.flatten()
 
     // get current zoom transform of the svg to apply to all nodes/edges
     let zoom = d3.zoomTransform(svg.node())
@@ -126,7 +126,7 @@ export class Graph extends APGBox {
     })
 
     svg.selectAll('.Graph-edge')
-      .data(edges_data)
+      .data(edges)
       .join('line')
         .classed('Graph-graph', true)
         .classed('Graph-edge', true)
@@ -146,7 +146,7 @@ export class Graph extends APGBox {
 
     let newEdgeFrom = null
     svg.selectAll('.Graph-node')
-      .data(nodes_data)
+      .data(nodes)
       .join('circle')
         .attr('r', 4.5)
         .classed('Graph-graph', true)
@@ -190,7 +190,7 @@ export class Graph extends APGBox {
                 .attr('cx', zoom.applyX(d.x))
                 .attr('cy', zoom.applyY(d.y))
           })
-          .on('drag', (d) => {
+          .on('drag', () => {
             // d3-drag's fancy coordinate computations (in d3.event.{x,y})
             // don't play very well with zooming
             let [x, y] = d3.zoomTransform(svg.node()).invert([

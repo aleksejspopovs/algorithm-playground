@@ -21,6 +21,7 @@ export class APGData {
     }
   }
 
+  /* eslint-disable no-unused-vars */
   equals (other) {}
   clone () {}
   freeze () {}

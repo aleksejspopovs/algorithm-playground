@@ -20,16 +20,16 @@ export class Spinner extends APGBox {
   }
 
   createLayout () {
-    let new_input = document.createElement('input')
-    new_input.type = 'number'
-    new_input.addEventListener('input', (e) => {
+    let input = document.createElement('input')
+    input.type = 'number'
+    input.addEventListener('input', (e) => {
       let value = parseInt(e.target.value)
       this.scheduleProcessing(() => {
         this.state.value = value
         this.output.value.write(value)
       })
     })
-    return new_input
+    return input
   }
 
   render (node) {

@@ -1,3 +1,3 @@
 import {APG} from './apg.js'
 
-let apg = new APG(document.body)
+new APG(document.body)

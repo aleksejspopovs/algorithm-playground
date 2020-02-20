@@ -16,6 +16,7 @@ export class APGBox {
   }
 
   createLayout () {}
+  /* eslint-disable no-unused-vars */
   render (node) {}
 
   newInputPlug (name, updateHandler = null) {
@@ -37,7 +38,7 @@ export class APGBox {
     if (this.output.hasOwnProperty(name)) {
       throw new Error(`cannot add duplicate output plug ${name}`)
     }
-    let plug = new APGOutputPlug(name, this, this._program)
+    let plug = new APGOutputPlug(name, this)
     this.output[name] = plug
     this._outputOrder.push(name)
   }

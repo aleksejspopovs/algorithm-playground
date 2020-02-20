@@ -39,7 +39,7 @@ export class APGInputPlug {
 }
 
 export class APGOutputPlug {
-  constructor (name, box, program) {
+  constructor (name, box) {
     this.name = name
     this._value = null
     this._box = box

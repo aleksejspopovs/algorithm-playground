@@ -1,4 +1,5 @@
-import {enumerate, generateUnusedKey, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
+import {generateUnusedKey, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
+import {segmentIntersections} from '../utils/geometry.js'
 import {APGData} from '../data.js'
 
 // makes a string with the property that
@@ -45,11 +46,11 @@ export class Node extends APGData {
     )
   }
 
-  clone (other) {
+  clone () {
     return new Node(this.name, this.x, this.y)
   }
 
-  freeze (other) {
+  freeze () {
     Object.freeze(this)
   }
 }
@@ -70,11 +71,11 @@ export class Edge extends APGData {
     )
   }
 
-  clone (other) {
+  clone () {
     return new Edge(this.name, this.from, this.to)
   }
 
-  freeze (other) {
+  freeze () {
     Object.freeze(this)
   }
 
@@ -320,9 +321,6 @@ export class Graph extends APGData {
   }
 
   flatten () {
-    let nodeNames = Object.keys(this._nodes)
-    let edgeNames = Object.keys(this._edges)
-
     return [
       Array.from(this._nodes.keys(), v => this._nodes.get(v)),
       Array.from(this._edges.keys(), e => this.flattenEdge(e))
