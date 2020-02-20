@@ -1,0 +1,21 @@
+{
+  "name": "apg",
+  "version": "1.0.0",
+  "description": "A visual programming language for algorithms & complexity education and research.",
+  "main": "js/demo.js",
+  "repository": "git@github.com:popoffka/algorithm-playground.git",
+  "author": "Aleksejs Popovs <aleksejs@popovs.lv>",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "devDependencies": {
+    "@ava/babel": "^1.0.1",
+    "ava": "^3.3.0",
+    "eslint": "^6.8.0"
+  },
+  "dependencies": {},
+  "scripts": {
+    "test": "ava",
+    "lint": "eslint js"
+  }
+}
