@@ -1,5 +1,4 @@
 import {generateUnusedKey, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
-import {segmentIntersections} from '../utils/geometry.js'
 import {APGData} from '../data.js'
 
 // makes a string with the property that
