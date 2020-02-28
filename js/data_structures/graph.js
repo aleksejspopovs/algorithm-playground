@@ -1,4 +1,4 @@
-import {generateUnusedKey, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
+import {generateUnusedKey, enumerate, objectsEqual, objectClone, objectFreeze} from '../utils/objects.js'
 import {APGData} from '../data.js'
 
 // makes a string with the property that
