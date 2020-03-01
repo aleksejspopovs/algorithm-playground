@@ -12,9 +12,10 @@ import {STInitializer, STUpdater} from './segment_tree.js'
 registerBox(STInitializer)
 registerBox(STUpdater)
 
-import {Graph, ExampleGraph} from './graph.js'
+import {Graph, ExampleGraph, SetsToColors} from './graph.js'
 registerBox(Graph)
 registerBox(ExampleGraph)
+registerBox(SetsToColors)
 
 import {CNFFormula, Assignment} from './cnf_formula.js'
 registerBox(CNFFormula)

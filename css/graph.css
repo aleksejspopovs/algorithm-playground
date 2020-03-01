@@ -21,3 +21,15 @@ svg.Graph-svg .Graph-edge:hover {
     stroke-opacity: 1;
     stroke-width: 4px;
 }
+
+svg.Graph-svg .Graph-node.Graph-color-1 {
+    fill: #f00;
+}
+
+svg.Graph-svg .Graph-node.Graph-color-2 {
+    fill: #0f0;
+}
+
+svg.Graph-svg .Graph-node.Graph-color-3 {
+    fill: #00f;
+}

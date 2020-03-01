@@ -74,22 +74,27 @@ export class SatToThreeSat extends APGBox {
 export class SatToClique extends APGBox {
   constructor () {
     super()
-    this.newInputPlug('formula', this.compute)
+    this.newInputPlug('formula', this.updateGraph)
+    this.newInputPlug('assignment', this.updateAssignment)
     this.newOutputPlug('graph')
     this.newOutputPlug('cliqueSize')
+    this.newOutputPlug('clique')
+    this.state = {formula: null}
   }
 
   static metadata () {
     return {category: 'karp', name: 'sat_clique'}
   }
 
-  compute () {
+  updateGraph () {
     const original = this.input.formula.read()
     let formula = original.simplified()
+    this.state.formula = formula
 
     if (formula === null) {
       this.output.graph.write(null)
       this.output.cliqueSize.write(null)
+      this.updateAssignment()
       return
     }
 
@@ -103,11 +108,13 @@ export class SatToClique extends APGBox {
 
     for (let [i, clause] of enumerate(formula.clauses)) {
       for (let literal of clause) {
-        let x = variablesNumbered.get(literal.variable.toString()) * 30
+        let varName = literal.variable.toString()
+        let x = variablesNumbered.get(varName) * 30
         let y = i * 30
         // literals inside a clause are uniquely identified by their
         // variable names (since the formula is simplified)
-        graph.addNode(`cl_${i}_${literal.variable}`, x, y)
+        let nodeName = `cl_${i}_${varName}`
+        graph.addNode(nodeName, x, y)
       }
     }
 
@@ -135,6 +142,31 @@ export class SatToClique extends APGBox {
 
     this.output.graph.write(graph)
     this.output.cliqueSize.write(formula.clauses.length)
+
+    this.updateAssignment()
+  }
+
+  updateAssignment () {
+    const assignment = this.input.assignment.read()
+
+    if ((this.state.formula === null) || (assignment === null)) {
+      this.output.clique.write(null)
+      return
+    }
+
+    let clique = new Set()
+    for (let [i, clause] of enumerate(this.state.formula.clauses)) {
+      // try to find a satisfied literal (just one) and take the corresponding node
+      for (let literal of clause) {
+        let varName = literal.variable.toString()
+        if (assignment.has(varName) === literal.valency) {
+          clique.add(`cl_${i}_${varName}`)
+          break
+        }
+      }
+    }
+
+    this.output.clique.write(clique)
   }
 }
 

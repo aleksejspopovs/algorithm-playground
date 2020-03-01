@@ -1,5 +1,6 @@
 import {APGBox} from '../box.js'
 import * as DS from '../data_structures/graph.js'
+import {enumerate} from '../utils/objects.js'
 
 export class ExampleGraph extends APGBox {
   constructor () {
@@ -26,9 +27,11 @@ export class Graph extends APGBox {
   constructor () {
     super()
     this.newInputPlug('graph', this.replaceGraph)
+    this.newInputPlug('nodeColors', this.replaceColors)
+    this.newInputPlug('edgeColors', this.replaceColors)
     this.newOutputPlug('graph')
-    this.state = {graph: new DS.Graph()}
-    this.scheduleProcessing(() => this.output.graph.write(this.state.graph))
+    this.state = {graph: new DS.Graph(), nodeColors: new Map(), edgeColors: new Map()}
+    this.scheduleProcessing(this.replaceGraph)
   }
 
   static metadata () {
@@ -38,6 +41,11 @@ export class Graph extends APGBox {
   replaceGraph () {
     this.state.graph = this.input.graph.copy()
     this.output.graph.write(this.state.graph)
+  }
+
+  replaceColors () {
+    this.state.nodeColors = this.input.nodeColors.copy() || (new Map())
+    this.state.edgeColors = this.input.edgeColors.copy() || (new Map())
   }
 
   createLayout () {
@@ -109,6 +117,8 @@ export class Graph extends APGBox {
   render (node) {
     let svg = d3.select(node).select('svg')
     let [nodes, edges] = this.state.graph.flatten()
+    let nodeColors = this.state.nodeColors
+    let edgeColors = this.state.edgeColors
 
     // get current zoom transform of the svg to apply to all nodes/edges
     let zoom = d3.zoomTransform(svg.node())
@@ -125,15 +135,15 @@ export class Graph extends APGBox {
       }
     })
 
+    let edgeColorClass = (e => `Graph-color-${edgeColors.get(e.name) || 0}`)
     svg.selectAll('.Graph-edge')
       .data(edges)
       .join('line')
-        .classed('Graph-graph', true)
-        .classed('Graph-edge', true)
-        .attr('x1', (d) => zoom.applyX(d.from.x))
-        .attr('y1', (d) => zoom.applyY(d.from.y))
-        .attr('x2', (d) => zoom.applyX(d.to.x))
-        .attr('y2', (d) => zoom.applyY(d.to.y))
+        .attr('class', d => `Graph-graph Graph-edge ${edgeColorClass(d)}`)
+        .attr('x1', d => zoom.applyX(d.from.x))
+        .attr('y1', d => zoom.applyY(d.from.y))
+        .attr('x2', d => zoom.applyX(d.to.x))
+        .attr('y2', d => zoom.applyY(d.to.y))
         .attr('marker-end', this.state.graph.directed ? 'url(#arrow-end)' : null)
         .on('click', (d) => {
           if (d3.event.altKey) {
@@ -144,16 +154,15 @@ export class Graph extends APGBox {
           }
         })
 
+    let nodeColorClass = (e => `Graph-color-${nodeColors.get(e.name) || 0}`)
     let newEdgeFrom = null
     svg.selectAll('.Graph-node')
       .data(nodes)
       .join('circle')
         .attr('r', 4.5)
-        .classed('Graph-graph', true)
-        .classed('Graph-node', true)
-        .classed('Graph-moving', false)
-        .attr('cx', (d) => zoom.applyX(d.x))
-        .attr('cy', (d) => zoom.applyY(d.y))
+        .attr('class', d => `Graph-graph Graph-node ${nodeColorClass(d)}`)
+        .attr('cx', d => zoom.applyX(d.x))
+        .attr('cy', d => zoom.applyY(d.y))
         .raise()
         .on('click', (d) => {
           if (d3.event.altKey) {
@@ -213,5 +222,40 @@ export class Graph extends APGBox {
         )
 
     let ghost = svg.select('.Graph-ghost-node').raise()
+  }
+}
+
+export class SetsToColors extends APGBox {
+  constructor () {
+    super()
+    this.newInputPlug('set1', this.update)
+    this.newInputPlug('set2', this.update)
+    this.newInputPlug('set3', this.update)
+    this.newOutputPlug('colors')
+    this.state = {colors: new Map()}
+    this.scheduleProcessing(this.update)
+  }
+
+  static metadata () {
+    return {category: 'graph', name: 'sets_to_colors'}
+  }
+
+  update () {
+    this.state.colors.clear()
+
+    for (
+      let [color, plug]
+      of enumerate([this.input.set1, this.input.set2, this.input.set3], 1)
+    ) {
+      let set = plug.read()
+      if (set === null) {
+        continue
+      }
+      for (let element of set.values()) {
+        this.state.colors.set(element, color)
+      }
+    }
+
+    this.output.colors.write(this.state.colors)
   }
 }
