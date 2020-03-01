@@ -16,8 +16,9 @@ import {Graph, ExampleGraph} from './graph.js'
 registerBox(Graph)
 registerBox(ExampleGraph)
 
-import {CNFFormula} from './cnf_formula.js'
+import {CNFFormula, Assignment} from './cnf_formula.js'
 registerBox(CNFFormula)
+registerBox(Assignment)
 
 import {SatToDomSet} from './sat_to_domset.js'
 registerBox(SatToDomSet)

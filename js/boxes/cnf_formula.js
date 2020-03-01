@@ -51,3 +51,89 @@ export class CNFFormula extends APGBox {
     node.getElementsByTagName('textarea')[0].value = this.state.formula.toString()
   }
 }
+
+export class Assignment extends APGBox {
+  constructor () {
+    super()
+    this.newInputPlug('formula', () => this.replaceInput('formula'))
+    this.newInputPlug('assignment', () => this.replaceInput('assignment'))
+    this.newOutputPlug('assignment')
+    this.state = {formula: null, satisfied: false, assignment: new Set()}
+  }
+
+  static metadata () {
+    return {category: 'cnf_formula', name: 'assignment'}
+  }
+
+  replaceInput (which) {
+    if (which === 'formula') {
+      this.state.formula = this.input.formula.copy()
+    } else {
+      this.state.assignment = this.input.assignment.copy()
+    }
+
+    // throw away any variables that are not in the formula
+    for (let v of this.state.assignment.values()) {
+      if (!this.state.formula || !this.state.formula.hasVariable(v)) {
+        this.state.assignment.delete(v)
+      }
+    }
+    this.output.assignment.write(this.state.assignment)
+
+    this.state.satisfied = (
+      this.state.formula && this.state.formula.satisfiedBy(this.state.assignment)
+    )
+  }
+
+  setVariable (variable, value) {
+    if (value) {
+      this.state.assignment.add(variable)
+    } else {
+      this.state.assignment.delete(variable)
+    }
+    this.output.assignment.write(this.state.assignment)
+    this.state.satisfied = this.state.formula.satisfiedBy(this.state.assignment)
+  }
+
+  createLayout () {
+    let outer = document.createElement('div')
+    let vars = document.createElement('div')
+    vars.style.width = '250px'
+    vars.classList.add('CNFFormula-vars')
+    outer.append(vars)
+    let satisfied = document.createElement('div')
+    satisfied.classList.add('CNFFormula-satisfied')
+    outer.append(satisfied)
+    return outer
+  }
+
+  render (node) {
+    let variables = (
+      this.state.formula
+      ? this.state.formula.variables.map(v => v.toString())
+      : []
+    )
+
+    let outer = d3.select(node).select('div')
+    let labels = outer.select('div.CNFFormula-vars')
+      .selectAll('label')
+      .data(variables)
+      .join(enter => {
+        let label = enter.append('label')
+        label.append('input').attr('type', 'checkbox')
+        label.append('span')
+        return label
+      })
+
+    labels.select('input')
+      .property('checked', v => this.state.assignment.has(v))
+      .on('click', (v, i, g) => {
+        let checkbox = g[i]
+        this.scheduleProcessing(() => this.setVariable(v, checkbox.checked))
+      })
+    labels.select('span').text(v => v)
+
+    outer.select('div.CNFFormula-satisfied')
+      .text(`satisfied: ${this.state.satisfied}`)
+  }
+}

@@ -65,6 +65,10 @@ export class CNFFormula extends APGData {
   constructor (variables, clauses) {
     super()
     this.variables = variables
+    this._variableSet = new Set()
+    for (let v of this.variables) {
+      this._variableSet.add(v.toString())
+    }
     this.clauses = clauses
   }
 
@@ -92,6 +96,19 @@ export class CNFFormula extends APGData {
 
   degreeAtMost (k) {
     return this.clauses.every(c => c.length <= k)
+  }
+
+  hasVariable (v) {
+    // the .toString() ensures that this works both with Variable objects and strings
+    return this._variableSet.has(v.toString())
+  }
+
+  satisfiedBy (assignment) {
+    // assignment is Set of toStringed variables that are to be
+    // set to true
+    return this.clauses.every(c => c.some(l =>
+      l.valency === assignment.has(l.variable.toString())
+    ))
   }
 
   simplified () {
