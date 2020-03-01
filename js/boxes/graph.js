@@ -39,7 +39,7 @@ export class Graph extends APGBox {
   }
 
   replaceGraph () {
-    this.state.graph = this.input.graph.copy()
+    this.state.graph = this.input.graph.copy() || (new DS.Graph())
     this.output.graph.write(this.state.graph)
   }
 
