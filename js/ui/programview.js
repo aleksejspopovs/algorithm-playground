@@ -257,7 +257,12 @@ export class ProgramView {
     let box = this.apg.getProgram().getBox(id)
     let node = this.getNodeForBox(id)
     if (node) {
-      box.render(node)
+      try {
+        box.render(node)
+      } catch (error) {
+        // TODO: report and display the same way we do for processing errors?
+        console.error(`Error while rendering box ${id}:`, error)
+      }
     }
   }
 
