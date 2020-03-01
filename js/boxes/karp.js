@@ -231,6 +231,10 @@ export class NodeCoverToDirHamPath extends APGBox {
      for (let nodeName of original.nodes()) {
       let edges = processedEdges.get(nodeName)
 
+      if (edges.length === 0) {
+        continue
+      }
+
       for (let [i, {destName}] of enumerate(edges)) {
         graph.addEdge(`n_${nodeName}_${destName}_enter`, `n_${nodeName}_${destName}_exit`)
 
