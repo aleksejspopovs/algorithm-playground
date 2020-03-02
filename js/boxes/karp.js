@@ -1,6 +1,7 @@
 import {APGBox} from '../box.js'
 import {Variable, Literal, CNFFormula} from '../data_structures/cnf_formula.js'
 import {Graph} from '../data_structures/graph.js'
+import {assert} from '../utils/assert.js'
 import {objectClone, enumerate} from '../utils/objects.js'
 
 /* reduction in this file are taken from [Karp72]
@@ -173,55 +174,91 @@ export class SatToClique extends APGBox {
 export class CliqueToNodeCover extends APGBox {
   constructor () {
     super()
-    this.newInputPlug('graph', this.compute)
-    this.newInputPlug('cliqueSize', this.compute)
+    this.newInputPlug('graph', this.updateGraph)
+    this.newInputPlug('cliqueSize', this.updateCliqueSize)
+    this.newInputPlug('clique', this.updateClique)
     this.newOutputPlug('graph')
     this.newOutputPlug('coverSize')
+    this.newOutputPlug('nodeCover')
   }
 
   static metadata () {
     return {category: 'karp', name: 'clique_nodecover'}
   }
 
-  compute () {
+  updateGraph () {
+    const graph = this.input.graph.read()
+    let cliqueSize = this.input.cliqueSize.read()
+
+    if (graph === null) {
+      this.output.graph.write(null)
+    } else {
+      this.output.graph.write(graph.complemented())
+    }
+
+    this.updateCliqueSize()
+    this.updateClique()
+  }
+
+  updateCliqueSize () {
     const graph = this.input.graph.read()
     let cliqueSize = this.input.cliqueSize.read()
 
     if ((graph === null) || (cliqueSize === null)) {
-      this.output.graph.write(null)
       this.output.coverSize.write(null)
+    } else {
+      this.output.coverSize.write(graph.nodeCount() - cliqueSize)
+    }
+  }
+
+  updateClique () {
+    const graph = this.input.graph.read()
+    const clique = this.input.clique.read()
+
+    if ((graph === null) || (clique === null)) {
+      this.output.nodeCover.write(null)
       return
     }
 
-    this.output.graph.write(graph.complemented())
-    this.output.coverSize.write(graph.nodeCount() - cliqueSize)
+    let nodeCover = new Set()
+    for (let node of graph.nodes()) {
+      if (!clique.has(node)) {
+        nodeCover.add(node)
+      }
+    }
+    this.output.nodeCover.write(nodeCover)
   }
 }
 
 export class NodeCoverToDirHamPath extends APGBox {
   constructor () {
     super()
-    this.newInputPlug('graph', this.compute)
-    this.newInputPlug('coverSize', this.compute)
+    this.newInputPlug('graph', this.updateGraph)
+    this.newInputPlug('coverSize', this.updateGraph)
+    this.newInputPlug('nodeCover', this.updateCover)
     this.newOutputPlug('graph')
+    this.newOutputPlug('path')
+    this.state = {orderedEdges: null, transformedGraph: null}
   }
 
   static metadata () {
     return {category: 'karp', name: 'nodecover_dirhampath'}
   }
 
-  compute () {
-    let original = this.input.graph.read()
+  updateGraph () {
+    const original = this.input.graph.read()
     let coverSize = this.input.coverSize.read()
 
     if ((original === null) || (coverSize === null)) {
       this.output.graph.write(null)
+      this.state.orderedEdges = null
+      this.state.transformedGraph = null
       return
     }
 
     let origBounds = original.boundingBox()
     let graph = new Graph(true)
-    let processedEdges = new Map()
+    let orderedEdges = new Map()
 
     for (let nodeName of original.nodes()) {
       let node = original.getNode(nodeName)
@@ -235,7 +272,7 @@ export class NodeCoverToDirHamPath extends APGBox {
           return {destName, angle}
         }
       ).sort((x, y) => x.angle - y.angle)
-      processedEdges.set(nodeName, edges)
+      orderedEdges.set(nodeName, edges)
 
       for (let {destName, angle} of edges) {
         graph.addNode(
@@ -261,7 +298,7 @@ export class NodeCoverToDirHamPath extends APGBox {
     }
 
      for (let nodeName of original.nodes()) {
-      let edges = processedEdges.get(nodeName)
+      let edges = orderedEdges.get(nodeName)
 
       if (edges.length === 0) {
         continue
@@ -288,5 +325,61 @@ export class NodeCoverToDirHamPath extends APGBox {
     }
 
     this.output.graph.write(graph)
+    this.state.orderedEdges = orderedEdges
+    this.state.transformedGraph = graph
+    this.updateCover()
+  }
+
+  updateCover () {
+    let cover = this.input.nodeCover.copy()
+    let targetCoverSize = this.input.coverSize.read()
+
+    if ((cover === null) || (this.state.orderedEdges === null)) {
+      this.output.path.write(null)
+      return
+    }
+
+    if (cover.size > targetCoverSize) {
+      // cover too big, give up
+      this.output.path.write([])
+      return
+    }
+
+    if (cover.size < targetCoverSize) {
+      // cover too small, pad
+      for (let node of this.state.orderedEdges.keys()) {
+        cover.add(node)
+        if (cover.size === targetCoverSize) {
+          break
+        }
+      }
+    }
+
+    let path = []
+    let currentNode = 'a_0'
+
+    let walkTo = (node => {
+      let edgeName = this.state.transformedGraph.getEdgeBetween(currentNode, node)
+      assert(edgeName !== null, `edge ${currentNode} → ${node} does not exist`)
+      path.push(edgeName)
+      currentNode = node
+    })
+
+    for (let [i, node] of enumerate(cover.values())) {
+      let edges = this.state.orderedEdges.get(node)
+      for (let {destName} of edges) {
+        walkTo(`n_${node}_${destName}_enter`)
+        if (!cover.has(destName)) {
+          walkTo(`n_${destName}_${node}_enter`)
+          walkTo(`n_${destName}_${node}_exit`)
+        }
+        walkTo(`n_${node}_${destName}_exit`)
+      }
+      if (i < targetCoverSize - 1) {
+        walkTo(`a_${i + 1}`)
+      }
+    }
+
+    this.output.path.write(path)
   }
 }

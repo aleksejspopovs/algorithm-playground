@@ -251,7 +251,9 @@ export class SetsToColors extends APGBox {
       if (set === null) {
         continue
       }
-      for (let element of set.values()) {
+      // let's make this work with both Sets and Arrays
+      let setIter = (set instanceof Set) ? set.values() : set
+      for (let element of setIter) {
         this.state.colors.set(element, color)
       }
     }

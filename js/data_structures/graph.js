@@ -146,7 +146,7 @@ export class Graph extends APGData {
     this._nodes = new Map()
     this._edges = new Map()
     this._edgesFrom = new Map()
-    this._edgeSet = new Set()
+    this._edgeMap = new Map()
   }
 
   equals (other) {
@@ -156,7 +156,7 @@ export class Graph extends APGData {
       && objectsEqual(this._nodes, other._nodes)
       && objectsEqual(this._edges, other._edges)
       && objectsEqual(this._edgesFrom, other._edgesFrom)
-      && objectsEqual(this._edgeSet, other._edgeSet)
+      && objectsEqual(this._edgeMap, other._edgeMap)
     )
   }
 
@@ -166,7 +166,7 @@ export class Graph extends APGData {
     result._nodes = objectClone(this._nodes)
     result._edges = objectClone(this._edges)
     result._edgesFrom = objectClone(this._edgesFrom)
-    result._edgeSet = objectClone(this._edgeSet)
+    result._edgeMap = objectClone(this._edgeMap)
     return result
   }
 
@@ -174,7 +174,7 @@ export class Graph extends APGData {
     objectFreeze(this._nodes)
     objectFreeze(this._edges)
     objectFreeze(this._edgesFrom)
-    objectFreeze(this._edgeSet)
+    objectFreeze(this._edgeMap)
     Object.freeze(this)
   }
 
@@ -250,7 +250,7 @@ export class Graph extends APGData {
     if (this._edges.has(name)) {
       throw new Error(`edge named ${name} already exists`)
     }
-    if (this._edgeSet.has(nodePair(from, to, this.directed))) {
+    if (this._edgeMap.has(nodePair(from, to, this.directed))) {
       throw new Error(`edge between ${from} and ${to} already exists`)
     }
     if (from === to) {
@@ -263,7 +263,7 @@ export class Graph extends APGData {
     if (!this.directed) {
       this._edgesFrom.get(to).add(name)
     }
-    this._edgeSet.add(nodePair(from, to, this.directed))
+    this._edgeMap.set(nodePair(from, to, this.directed), name)
 
     return this
   }
@@ -278,7 +278,7 @@ export class Graph extends APGData {
     if (!this.directed) {
       this._edgesFrom.get(edge.to).delete(name)
     }
-    this._edgeSet.delete(nodePair(edge.from, edge.to, this.directed))
+    this._edgeMap.delete(nodePair(edge.from, edge.to, this.directed))
 
     this._edges.delete(name)
 
@@ -303,7 +303,11 @@ export class Graph extends APGData {
   }
 
   hasEdgeBetween (from, to) {
-    return this._edgeSet.has(nodePair(from, to, this.directed))
+    return this._edgeMap.has(nodePair(from, to, this.directed))
+  }
+
+  getEdgeBetween (from, to) {
+    return this._edgeMap.get(nodePair(from, to, this.directed)) || null
   }
 
   offset (dx, dy, scale=1.0, nodePrefix='', rot=0.0) {
