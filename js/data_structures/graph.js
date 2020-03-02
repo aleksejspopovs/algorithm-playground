@@ -146,6 +146,7 @@ export class Graph extends APGData {
     this._nodes = new Map()
     this._edges = new Map()
     this._edgesFrom = new Map()
+    this._edgesTo = directed ? new Map() : this._edgesFrom
     this._edgeMap = new Map()
   }
 
@@ -156,6 +157,7 @@ export class Graph extends APGData {
       && objectsEqual(this._nodes, other._nodes)
       && objectsEqual(this._edges, other._edges)
       && objectsEqual(this._edgesFrom, other._edgesFrom)
+      && objectsEqual(this._edgesTo, other._edgesTo)
       && objectsEqual(this._edgeMap, other._edgeMap)
     )
   }
@@ -166,6 +168,7 @@ export class Graph extends APGData {
     result._nodes = objectClone(this._nodes)
     result._edges = objectClone(this._edges)
     result._edgesFrom = objectClone(this._edgesFrom)
+    result._edgesTo = objectClone(this._edgesTo)
     result._edgeMap = objectClone(this._edgeMap)
     return result
   }
@@ -174,6 +177,7 @@ export class Graph extends APGData {
     objectFreeze(this._nodes)
     objectFreeze(this._edges)
     objectFreeze(this._edgesFrom)
+    objectFreeze(this._edgesTo)
     objectFreeze(this._edgeMap)
     Object.freeze(this)
   }
@@ -188,6 +192,9 @@ export class Graph extends APGData {
     let node = new Node(name, x, y)
     this._nodes.set(name, node)
     this._edgesFrom.set(name, new Set())
+    if (this.directed) {
+      this._edgesTo.set(name, new Set())
+    }
     this._nodeJustAdded = name
 
     return this
@@ -202,9 +209,14 @@ export class Graph extends APGData {
       this._nodeJustAdded = null
     }
 
-    this.edgesFrom(name).forEach((e) => this.deleteEdge(e))
-
+    this._edgesFrom.get(name).forEach(e => this.deleteEdge(e))
     this._edgesFrom.delete(name)
+
+    if (this.directed) {
+      this._edgesTo.get(name).forEach(e => this.deleteEdge(e))
+      this._edgesTo.delete(name)
+    }
+
     this._nodes.delete(name)
 
     return this
@@ -260,9 +272,7 @@ export class Graph extends APGData {
     let edge = new Edge(name, from, to)
     this._edges.set(name, edge)
     this._edgesFrom.get(from).add(name)
-    if (!this.directed) {
-      this._edgesFrom.get(to).add(name)
-    }
+    this._edgesTo.get(to).add(name)
     this._edgeMap.set(nodePair(from, to, this.directed), name)
 
     return this
@@ -275,9 +285,7 @@ export class Graph extends APGData {
 
     let edge = this._edges.get(name)
     this._edgesFrom.get(edge.from).delete(name)
-    if (!this.directed) {
-      this._edgesFrom.get(edge.to).delete(name)
-    }
+    this._edgesTo.get(edge.to).delete(name)
     this._edgeMap.delete(nodePair(edge.from, edge.to, this.directed))
 
     this._edges.delete(name)
