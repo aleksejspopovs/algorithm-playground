@@ -5,20 +5,23 @@ import {enumerate} from '../utils/objects.js'
 export class ThreeSatToThreeColor extends APGBox {
   constructor () {
     super()
-    this.newInputPlug('formula', this.compute)
+    this.newInputPlug('formula', this.updateFormula)
+    this.newInputPlug('assignment', this.updateAssignment)
     this.newOutputPlug('graph')
+    this.newOutputPlug('coloring')
   }
 
   static metadata () {
     return {category: 'reductions', name: 'threesat_threecolor'}
   }
 
-  compute () {
+  updateFormula () {
     /* this reduction is given in [GJS76] (see REFERENCES.md) */
     const formula = this.input.formula.read()
 
     if (formula === null) {
       this.output.graph.write(null)
+      this.updateAssignment()
       return
     }
 
@@ -103,6 +106,66 @@ export class ThreeSatToThreeColor extends APGBox {
     }
 
     this.output.graph.write(graph)
+    this.updateAssignment()
+  }
+
+  updateAssignment () {
+    const formula = this.input.formula.read()
+    const assignment = this.input.assignment.read()
+
+    if ((formula === null) || (assignment === null)) {
+      this.output.coloring.write(null)
+      return
+    }
+
+    let coloring = new Map()
+    let [colorT, colorF, colorDC] = [2, 1, 3]
+    coloring.set('t', colorT)
+    coloring.set('f', colorF)
+    coloring.set('dc', colorDC)
+
+    for (let variable of formula.variables) {
+      let value = assignment.has(variable.toString())
+      coloring.set(`pos_${variable}`, value ? colorT : colorF)
+      coloring.set(`neg_${variable}`, !value ? colorT : colorF)
+    }
+
+    for (let [i, clause] of enumerate(formula.clauses)) {
+      // _inner{,L,R} form an OR-gadget for the first two literals of the clause
+      if (clause[0].satisfiedBy(assignment)) {
+        coloring.set(`cl_${i}_inner`, colorT)
+        coloring.set(`cl_${i}_innerL`, colorF)
+        coloring.set(`cl_${i}_innerR`, colorDC)
+      } else if (clause[1].satisfiedBy(assignment)) {
+        coloring.set(`cl_${i}_inner`, colorT)
+        coloring.set(`cl_${i}_innerL`, colorDC)
+        coloring.set(`cl_${i}_innerR`, colorF)
+      } else {
+        coloring.set(`cl_${i}_inner`, colorF)
+        coloring.set(`cl_${i}_innerL`, colorT)
+        coloring.set(`cl_${i}_innerR`, colorDC)
+      }
+
+      // _outer{,L,R} is an OR-gadget for _inner and the third literal of the clause
+      if (coloring.get(`cl_${i}_inner`) === colorT) {
+        coloring.set(`cl_${i}_outer`, colorT)
+        coloring.set(`cl_${i}_outerL`, colorF)
+        coloring.set(`cl_${i}_outerR`, colorDC)
+      } else if (clause[2].satisfiedBy(assignment)) {
+        coloring.set(`cl_${i}_outer`, colorT)
+        coloring.set(`cl_${i}_outerL`, colorDC)
+        coloring.set(`cl_${i}_outerR`, colorF)
+      } else {
+        // this clause is not satisfied!
+        // let's unset the colors for all nodes associated with the clause
+        // so that it's more obvious
+        for (let suffix of ['inner', 'innerL', 'innerR']) {
+          coloring.delete(`cl_${i}_${suffix}`)
+        }
+      }
+    }
+
+    this.output.coloring.write(coloring)
   }
 }
 
