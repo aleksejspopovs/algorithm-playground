@@ -172,21 +172,26 @@ export class ThreeSatToThreeColor extends APGBox {
 export class ThreeColorPlanarize extends APGBox {
   constructor () {
     super()
-    this.newInputPlug('graph', this.compute)
+    this.newInputPlug('graph', this.updateGraph)
+    this.newInputPlug('coloring', this.updateColoring)
     this.newOutputPlug('graph')
+    this.newOutputPlug('coloring')
+    this.state = {crossovers: null}
   }
 
   static metadata () {
     return {category: 'reductions', name: 'threecolor_planarize'}
   }
 
-  compute () {
+  updateGraph () {
     /* this transformation is given in [GJS76] (see REFERENCES.md) */
     // TODO: repeat until planar
     let graph = this.input.graph.copy()
 
     if (graph === null) {
+      this.state.crossovers = null
       this.output.graph.write(null)
+      this.updateColoring()
       return
     }
 
@@ -209,6 +214,7 @@ export class ThreeColorPlanarize extends APGBox {
       startIndex++
     }
 
+    this.state.crossovers = []
     for (let [i, xing] of enumerate(intersections, startIndex)) {
       // TODO: yielding
 
@@ -248,6 +254,7 @@ export class ThreeColorPlanarize extends APGBox {
       bdx *= side / blen
       bdy *= side / blen
 
+      this.state.crossovers.push([i, edgeA, edgeB])
       graph.addNode(`x_${i}_tl`, xing.x - adx - bdx, xing.y - ady - bdy)
            .addNode(`x_${i}_tc`, xing.x - bdx, xing.y - bdy)
            .addNode(`x_${i}_tr`, xing.x + adx - bdx, xing.y + ady - bdy)
@@ -309,5 +316,57 @@ export class ThreeColorPlanarize extends APGBox {
     }
 
     this.output.graph.write(graph)
+    this.updateColoring()
+  }
+
+  updateColoring () {
+    let coloring = this.input.coloring.copy()
+
+    if ((this.state.crossovers === null) || (coloring === null)) {
+      this.output.coloring.write(null)
+      return
+    }
+
+    for (let [i, edgeA, edgeB] of this.state.crossovers) {
+      // the crossover gadget essentially "copies over" the color of the
+      // .from vertex of each edge. if either of the .from vertices of the
+      // two edges here doesn't have a color in the given assignment, skip
+      // this crossing
+      if (!coloring.has(edgeA.from) || !coloring.has(edgeB.from)) {
+        continue
+      }
+
+      let aFromColor = coloring.get(edgeA.from)
+      let bFromColor = coloring.get(edgeB.from)
+
+      coloring.set(`x_${i}_afrom_cp`, aFromColor)
+      coloring.set(`x_${i}_bfrom_cp`, bFromColor)
+      if (aFromColor === bFromColor) {
+        let otherX = (aFromColor % 3) + 1
+        let otherY = (otherX % 3) + 1
+        coloring.set(`x_${i}_tl`, otherX)
+        coloring.set(`x_${i}_cl`, otherX)
+        coloring.set(`x_${i}_cr`, otherX)
+        coloring.set(`x_${i}_br`, otherX)
+        coloring.set(`x_${i}_tc`, otherY)
+        coloring.set(`x_${i}_tr`, otherY)
+        coloring.set(`x_${i}_bl`, otherY)
+        coloring.set(`x_${i}_bc`, otherY)
+        coloring.set(`x_${i}_cc`, aFromColor)
+      } else {
+        let other = (1 + 2 + 3) - aFromColor - bFromColor
+        coloring.set(`x_${i}_tl`, other)
+        coloring.set(`x_${i}_tr`, other)
+        coloring.set(`x_${i}_bl`, other)
+        coloring.set(`x_${i}_br`, other)
+        coloring.set(`x_${i}_cc`, other)
+        coloring.set(`x_${i}_tc`, aFromColor)
+        coloring.set(`x_${i}_bc`, aFromColor)
+        coloring.set(`x_${i}_cl`, bFromColor)
+        coloring.set(`x_${i}_cr`, bFromColor)
+      }
+    }
+
+    this.output.coloring.write(coloring)
   }
 }
