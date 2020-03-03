@@ -49,7 +49,7 @@ export class SatToThreeSat extends APGBox {
     }
 
     let newClauses = []
-    for (let [i, clause] of enumerate(original.clauses)) {
+    for (let clause of original.clauses) {
       this.state.extraVars.push([])
 
       if (clause.length <= 3) {
@@ -226,7 +226,6 @@ export class CliqueToNodeCover extends APGBox {
 
   updateGraph () {
     const graph = this.input.graph.read()
-    let cliqueSize = this.input.cliqueSize.read()
 
     if (graph === null) {
       this.output.graph.write(null)
