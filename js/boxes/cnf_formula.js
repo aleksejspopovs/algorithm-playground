@@ -99,9 +99,9 @@ export class Assignment extends APGBox {
 
   setVariable (variable, value) {
     if (value) {
-      this.state.assignment.add(variable)
+      this.state.assignment.add(variable.toString())
     } else {
-      this.state.assignment.delete(variable)
+      this.state.assignment.delete(variable.toString())
     }
     this.outputAssignment()
     this.state.satisfied = this.state.formula.satisfiedBy(this.state.assignment)
@@ -122,7 +122,7 @@ export class Assignment extends APGBox {
   render (node) {
     let variables = (
       this.state.formula
-      ? this.state.formula.variables.map(v => v.toString())
+      ? this.state.formula.variables
       : []
     )
 
@@ -134,16 +134,18 @@ export class Assignment extends APGBox {
         let label = enter.append('label')
         label.append('input').attr('type', 'checkbox')
         label.append('span')
+        label.append('sub')
         return label
       })
 
     labels.select('input')
-      .property('checked', v => this.state.assignment.has(v))
+      .property('checked', v => this.state.assignment.has(v.toString()))
       .on('click', (v, i, g) => {
         let checkbox = g[i]
         this.scheduleProcessing(() => this.setVariable(v, checkbox.checked))
       })
-    labels.select('span').text(v => v)
+    labels.select('span').text(v => v.base)
+    labels.select('sub').text(v => v.subscript)
 
     outer.select('div.CNFFormula-satisfied')
       .text(`satisfied: ${this.state.satisfied}`)
