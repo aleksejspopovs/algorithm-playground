@@ -1,5 +1,6 @@
 import {APGBox} from '../box.js'
 import * as DS from '../data_structures/cnf_formula.js'
+import {objectClone} from '../utils/objects.js'
 
 export class CNFFormula extends APGBox {
   constructor () {
@@ -65,6 +66,23 @@ export class Assignment extends APGBox {
     return {category: 'cnf_formula', name: 'assignment'}
   }
 
+  outputAssignment () {
+    // internally, we keep the exact assignment that we were given,
+    // even though it might contain variables not found in the current
+    // formula. we do this because someone might be trying to update
+    // the formula and the assignment simultaneously, but the assignment
+    // arrives first, and we don't want to throw random variables out of
+    // it. but when outputting, we always want to give a valid assignment
+    // to the current variable.
+    let assignment = objectClone(this.state.assignment)
+    for (let v of assignment.values()) {
+      if (!this.state.formula || !this.state.formula.hasVariable(v)) {
+        assignment.delete(v)
+      }
+    }
+    this.output.assignment.write(assignment)
+  }
+
   replaceInput (which) {
     if (which === 'formula') {
       this.state.formula = this.input.formula.copy()
@@ -72,13 +90,7 @@ export class Assignment extends APGBox {
       this.state.assignment = this.input.assignment.copy()
     }
 
-    // throw away any variables that are not in the formula
-    for (let v of this.state.assignment.values()) {
-      if (!this.state.formula || !this.state.formula.hasVariable(v)) {
-        this.state.assignment.delete(v)
-      }
-    }
-    this.output.assignment.write(this.state.assignment)
+    this.outputAssignment()
 
     this.state.satisfied = (
       this.state.formula && this.state.formula.satisfiedBy(this.state.assignment)
@@ -91,7 +103,7 @@ export class Assignment extends APGBox {
     } else {
       this.state.assignment.delete(variable)
     }
-    this.output.assignment.write(this.state.assignment)
+    this.outputAssignment()
     this.state.satisfied = this.state.formula.satisfiedBy(this.state.assignment)
   }
 

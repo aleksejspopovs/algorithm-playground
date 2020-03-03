@@ -56,6 +56,10 @@ export class Literal extends APGData {
     Object.freeze(this)
   }
 
+  satisfiedBy (assignment) {
+    return this.valency === assignment.has(this.variable.toString())
+  }
+
   toString () {
     return (this.valency ? '' : '!') + this.variable.toString()
   }
@@ -106,9 +110,7 @@ export class CNFFormula extends APGData {
   satisfiedBy (assignment) {
     // assignment is Set of toStringed variables that are to be
     // set to true
-    return this.clauses.every(c => c.some(l =>
-      l.valency === assignment.has(l.variable.toString())
-    ))
+    return this.clauses.every(c => c.some(l => l.satisfiedBy(assignment)))
   }
 
   simplified () {

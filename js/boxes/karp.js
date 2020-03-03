@@ -10,19 +10,24 @@ import {objectClone, enumerate} from '../utils/objects.js'
 export class SatToThreeSat extends APGBox {
   constructor () {
     super()
-    this.newInputPlug('formula', this.compute)
+    this.newInputPlug('formula', this.updateFormula)
+    this.newInputPlug('assignment', this.updateAssignment)
     this.newOutputPlug('formula')
+    this.newOutputPlug('assignment')
+    this.state = {extraVars: null}
   }
 
   static metadata () {
     return {category: 'karp', name: 'sat_threesat'}
   }
 
-  compute () {
+  updateFormula () {
     const original = this.input.formula.read()
 
     if (original === null) {
       this.output.formula.write(null)
+      this.state.extraVars = null
+      this.updateAssignment()
       return
     }
 
@@ -34,15 +39,19 @@ export class SatToThreeSat extends APGBox {
     )
 
     let newVariables = objectClone(original.variables)
+    this.state.extraVars = []
     let pickExtraVar = () => {
       let res = new Variable(extraVarBase, extraVarSubscript)
       extraVarSubscript++
       newVariables.push(res)
+      this.state.extraVars[this.state.extraVars.length - 1].push(res)
       return res
     }
 
     let newClauses = []
-    for (let clause of original.clauses) {
+    for (let [i, clause] of enumerate(original.clauses)) {
+      this.state.extraVars.push([])
+
       if (clause.length <= 3) {
         newClauses.push(clause)
         continue
@@ -69,6 +78,35 @@ export class SatToThreeSat extends APGBox {
     }
 
     this.output.formula.write(new CNFFormula(newVariables, newClauses))
+    this.updateAssignment()
+  }
+
+  updateAssignment () {
+    const formula = this.input.formula.read()
+    let assignment = this.input.assignment.copy()
+
+    if ((this.state.extraVars === null) || (assignment === null)) {
+      this.output.assignment.write(null)
+      return
+    }
+
+    for (let [i, clause] of enumerate(formula.clauses)) {
+      if (clause.length <= 3) {
+        continue
+      }
+
+      let extraVars = this.state.extraVars[i]
+      let satisfied = clause[0].satisfiedBy(assignment)
+      for (let [j, v] of enumerate(extraVars)) {
+        satisfied = satisfied || clause[j + 1].satisfiedBy(assignment)
+        if (satisfied) {
+          break
+        }
+        assignment.add(v.toString())
+      }
+    }
+
+    this.output.assignment.write(assignment)
   }
 }
 
