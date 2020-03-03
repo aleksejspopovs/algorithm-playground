@@ -168,7 +168,7 @@ export class Graph extends APGData {
     result._nodes = objectClone(this._nodes)
     result._edges = objectClone(this._edges)
     result._edgesFrom = objectClone(this._edgesFrom)
-    result._edgesTo = objectClone(this._edgesTo)
+    result._edgesTo = this.directed ? objectClone(this._edgesTo) : result._edgesFrom
     result._edgeMap = objectClone(this._edgeMap)
     return result
   }
